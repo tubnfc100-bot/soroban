@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bàn Tính Soroban</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: một cột trung tâm (tối đa 1080px). Bàn tính gỗ là "nhân vật chính" — màu gỗ giữ nguyên ở cả hai chế độ sáng/tối,
+   giao diện xung quanh dùng giấy washi xanh xám + mực chàm (ai-iro) làm màu nhấn. */
+:root {
+  --paper: #EBEFF3;
+  --surface: #FFFFFF;
+  --surface-2: #F5F7FA;
+  --ink: #1B2336;
+  --muted: #5A6377;
+  --line: #D3D9E2;
+  --ai: #2B4893;
+  --on-ai: #FFFFFF;
+  --ai-soft: #DCE3F4;
+  --good: #1F7F55;
+  --good-soft: #DAF0E4;
+  --bad: #B03E2E;
+  --bad-soft: #F6DFDA;
+  --gold: #D6961A;
+  --gold-soft: #FBEFD3;
+  /* Gỗ bàn tính — cố định ở mọi chế độ */
+  --wood-hi: #6B4629;
+  --wood: #4E321D;
+  --wood-lo: #2F1D10;
+  --beam: #231509;
+  --rod: #CDB894;
+  --bead-hi: #F4D8A3;
+  --bead: #D49B4E;
+  --bead-lo: #8A5620;
+  --dot: #F4E6C8;
+
+  --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --r-sm: 8px;
+  --r-md: 14px;
+  --shadow: 0 1px 2px rgba(20, 30, 60, .06), 0 6px 20px rgba(20, 30, 60, .07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11161F; --surface: #1A202C; --surface-2: #212838; --ink: #E6E9F0; --muted: #9AA3B5; --line: #2D3547;
+    --ai: #93A9EC; --on-ai: #0F1528; --ai-soft: #25304B; --good: #62C796; --good-soft: #163527; --bad: #EE8A78;
+    --bad-soft: #3B201B; --gold: #F0B948; --gold-soft: #3A2E14;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11161F; --surface: #1A202C; --surface-2: #212838; --ink: #E6E9F0; --muted: #9AA3B5; --line: #2D3547;
+  --ai: #93A9EC; --on-ai: #0F1528; --ai-soft: #25304B; --good: #62C796; --good-soft: #163527; --bad: #EE8A78;
+  --bad-soft: #3B201B; --gold: #F0B948; --gold-soft: #3A2E14;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ai); outline-offset: 2px; border-radius: 6px; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; }
+
+/* ---------- Thanh trên ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar .wrap { display: flex; align-items: center; gap: 12px; padding-block: 10px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; cursor: pointer; }
+.brand-mark { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(180deg, var(--wood-hi), var(--wood-lo)); display: grid; place-items: center; }
+.brand-mark span { width: 18px; height: 10px; background: linear-gradient(180deg, var(--bead-hi), var(--bead) 55%, var(--bead-lo)); clip-path: polygon(22% 0, 78% 0, 100% 50%, 78% 100%, 22% 100%, 0 50%); }
+.brand b { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; }
+.nav { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.nav button { background: none; border: 0; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: .92rem; color: var(--muted); }
+.nav button:hover { color: var(--ink); background: var(--surface-2); }
+.nav button[aria-current="page"] { color: var(--ai); background: var(--ai-soft); }
+.star-total { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; padding-inline: 6px; }
+
+main { padding-block: 24px 64px; }
+
+/* ---------- Nút ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 0; cursor: pointer; font-weight: 700; font-size: 1rem;
+  padding: 11px 20px; border-radius: 999px; background: var(--ai); color: var(--on-ai);
+  transition: transform .12s ease, filter .12s ease;
+  min-height: 44px;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: translateY(1px) scale(.98); }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1.5px solid var(--line); }
+.btn.ghost:hover { border-color: var(--ai); }
+.btn.soft { background: var(--ai-soft); color: var(--ai); }
+.btn.good { background: var(--good); color: var(--surface); }
+.btn.small { padding: 6px 14px; font-size: .88rem; min-height: 36px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ---------- Trang chủ ---------- */
+.hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 32px; align-items: center; padding-block: 12px 36px; }
+.hero-jp { font-size: .95rem; letter-spacing: .3em; color: var(--muted); font-weight: 600; }
+.hero h1 { font-size: clamp(2.3rem, 5.5vw, 3.6rem); font-weight: 800; margin-block: 6px 12px; }
+.hero h1 em { font-style: normal; color: var(--ai); }
+.hero p.lead { font-size: 1.08rem; color: var(--muted); max-width: 52ch; margin-bottom: 20px; }
+.hero-abacus { display: grid; justify-items: center; gap: 10px; }
+.hero-note { font-size: .85rem; color: var(--muted); text-align: center; }
+
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-block: 8px 16px; flex-wrap: wrap; }
+.section-head h2 { font-size: 1.7rem; }
+.section-head p { color: var(--muted); font-size: .95rem; }
+
+.levels { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.level-card {
+  position: relative; text-align: left; cursor: pointer;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-md);
+  padding: 16px 16px 14px; display: grid; gap: 6px; box-shadow: var(--shadow);
+  transition: transform .15s ease, border-color .15s ease;
+}
+.level-card:hover { transform: translateY(-2px); border-color: var(--ai); }
+.level-card.locked { cursor: not-allowed; opacity: .6; box-shadow: none; }
+.level-card.locked:hover { transform: none; border-color: var(--line); }
+.level-card.next { border-color: var(--ai); }
+.lc-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.lc-num { font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1; color: var(--ai); font-variant-numeric: tabular-nums; }
+.lc-kyu { font-size: .78rem; font-weight: 700; letter-spacing: .06em; color: var(--muted); background: var(--surface-2); padding: 2px 8px; border-radius: 999px; }
+.lc-name { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; }
+.lc-desc { font-size: .88rem; color: var(--muted); line-height: 1.45; }
+.lc-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: .82rem; color: var(--muted); }
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 1.05rem; }
+.stars .off { color: var(--line); }
+.tag-next { font-size: .75rem; font-weight: 700; color: var(--on-ai); background: var(--ai); padding: 2px 8px; border-radius: 999px; }
+
+.home-extra { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 28px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px; box-shadow: var(--shadow); min-width: 0; }
+.panel h3 { font-size: 1.25rem; margin-bottom: 6px; }
+.panel p { color: var(--muted); font-size: .95rem; margin-bottom: 12px; }
+
+/* ---------- Bàn tính ---------- */
+.abacus { --bw: clamp(30px, 8.6vw, 52px); --bh: calc(var(--bw) * .5); --pad: 5px; display: inline-grid; gap: 6px; max-width: 100%; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.abacus.big { --bw: clamp(34px, 11vw, 60px); }
+.ab-frame {
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood) 30%, var(--wood-lo));
+  border-radius: 12px; padding: 12px 12px;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.12), inset 0 -3px 0 rgba(0,0,0,.35), 0 10px 24px rgba(40, 20, 5, .28);
+}
+.ab-cols { display: flex; background: rgba(0,0,0,.18); border-radius: 6px; padding-inline: 4px; }
+.ab-col { position: relative; width: calc(var(--bw) + var(--pad) * 2); padding-inline: var(--pad); display: flex; flex-direction: column; border-radius: 6px; cursor: pointer; }
+.ab-col:focus-visible { outline: 3px solid var(--bead-hi); outline-offset: -2px; }
+.ab-heaven, .ab-earth { position: relative; }
+.ab-heaven { height: calc(var(--bh) * 2 + 6px); }
+.ab-earth { height: calc(var(--bh) * 5 + 6px); }
+.ab-heaven::before, .ab-earth::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; transform: translateX(-50%); background: linear-gradient(90deg, #9d8a6b, var(--rod), #9d8a6b); }
+.ab-beam { position: relative; height: 12px; margin-inline: calc(var(--pad) * -1); background: linear-gradient(180deg, #3a2615, var(--beam)); box-shadow: 0 1px 0 rgba(255,255,255,.1); }
+.ab-dot { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; border-radius: 50%; background: var(--dot); transform: translate(-50%, -50%); }
+.bead {
+  position: absolute; left: var(--pad); right: var(--pad); height: calc(var(--bh) - 2px);
+  background: linear-gradient(180deg, var(--bead-hi) 0%, var(--bead) 45%, var(--bead-lo) 100%);
+  clip-path: polygon(20% 0, 80% 0, 100% 50%, 80% 100%, 20% 100%, 0 50%);
+  transition: top .16s cubic-bezier(.3, .7, .4, 1);
+  cursor: pointer;
+}
+.bead::after { content: ""; position: absolute; left: 30%; right: 30%; top: 14%; height: 18%; border-radius: 50%; background: rgba(255,255,255,.35); }
+.bead.h { top: 3px; }
+.bead.h.on { top: calc(var(--bh) + 3px); }
+.bead.e { top: calc(3px + (var(--k) + 1) * var(--bh)); }
+.bead.e.on { top: calc(3px + var(--k) * var(--bh)); }
+.abacus.hl .bead.on { filter: saturate(1.25) brightness(1.05); }
+.ab-col.flash { background: rgba(255, 230, 170, .22); }
+.abacus.locked .ab-col, .abacus.locked .bead { cursor: default; }
+.ab-labels { display: flex; padding-inline: 16px; }
+.ab-labels span { width: calc(var(--bw) + var(--pad) * 2); text-align: center; font-size: .68rem; color: var(--muted); font-weight: 600; line-height: 1.2; }
+.ab-value { font-family: var(--font-display); font-weight: 800; font-size: 2.2rem; line-height: 1; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink); min-height: 2.2rem; }
+.ab-value.hidden-val { color: var(--muted); font-size: 1rem; font-weight: 600; font-family: var(--font-body); display: grid; place-items: center; }
+
+/* ---------- Trang cấp độ ---------- */
+.crumb { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; color: var(--muted); font-weight: 600; cursor: pointer; padding: 4px 0; margin-bottom: 10px; }
+.crumb:hover { color: var(--ai); }
+.level-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 18px; }
+.level-head .eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ai); }
+.level-head h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); font-weight: 800; margin-block: 2px 6px; }
+.level-head p { color: var(--muted); }
+.tabs { display: flex; gap: 6px; border-bottom: 1.5px solid var(--line); margin-bottom: 22px; overflow-x: auto; }
+.tabs button { background: none; border: 0; padding: 10px 14px; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1.5px; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--ai); border-bottom-color: var(--ai); }
+
+.lessons { display: grid; gap: 16px; }
+.lesson { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px; box-shadow: var(--shadow); }
+.lesson.no-demo { grid-template-columns: minmax(0, 1fr); }
+.lesson-step { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.lesson h3 { font-size: 1.35rem; margin-block: 2px 8px; }
+.lesson .body { display: grid; gap: 8px; max-width: 62ch; }
+.lesson .body b { color: var(--ai); }
+.demo { display: grid; justify-items: center; gap: 10px; min-width: 0; }
+.demo-caption { min-height: 3em; max-width: 34ch; text-align: center; font-size: .92rem; font-weight: 600; color: var(--ink); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; width: 100%; max-width: 44ch; font-size: .88rem; }
+.steps li { padding: 6px 10px; border-radius: var(--r-sm); background: var(--surface-2); color: var(--muted); border-left: 3px solid transparent; }
+.steps li.head { background: none; font-weight: 700; color: var(--ink); padding-left: 0; }
+.steps li.cur { color: var(--ink); background: var(--ai-soft); border-left-color: var(--ai); }
+.steps li.done { color: var(--ink); }
+
+.mini-table { border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.mini-table td, .mini-table th { border: 1px solid var(--line); padding: 4px 12px; text-align: center; }
+.mini-table th { background: var(--surface-2); font-weight: 700; font-size: .85rem; }
+.table-scroll { overflow-x: auto; max-width: 100%; }
+
+/* Hướng dẫn phụ huynh */
+.guide { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.guide .panel h3 { display: flex; align-items: center; gap: 8px; }
+.guide ol, .guide ul, .article ol, .article ul { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; }
+.guide .full { grid-column: 1 / -1; }
+.quote-list { list-style: none !important; padding: 0 !important; }
+.quote-list li { background: var(--gold-soft); border-radius: var(--r-sm); padding: 8px 12px; font-style: italic; }
+.pill { display: inline-block; font-size: .78rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--ai-soft); color: var(--ai); }
+
+/* ---------- Luyện tập ---------- */
+.practice { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; justify-items: center; }
+.pbar { width: 100%; max-width: 640px; display: grid; gap: 6px; }
+.pbar-top { display: flex; justify-content: space-between; font-size: .88rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pbar-track { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.pbar-fill { height: 100%; background: var(--ai); border-radius: 999px; transition: width .3s ease; }
+.qcard { width: 100%; max-width: 640px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 22px 20px; box-shadow: var(--shadow); display: grid; gap: 16px; justify-items: center; text-align: center; }
+.q-label { font-size: .9rem; font-weight: 700; color: var(--muted); }
+.q-number { font-family: var(--font-display); font-weight: 800; font-size: clamp(3rem, 12vw, 4.6rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.q-words { color: var(--muted); font-size: .95rem; margin-top: -8px; }
+.q-expr { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.2rem, 9vw, 3.4rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.q-expr .qm { color: var(--ai); }
+.q-column { font-family: var(--font-display); font-weight: 700; font-size: 2rem; line-height: 1.2; font-variant-numeric: tabular-nums; border: 1.5px solid var(--line); border-radius: var(--r-sm); padding: 8px 18px; display: grid; justify-items: end; min-width: 140px; }
+.q-column .rule { width: 100%; border-top: 2px solid var(--ink); margin-top: 4px; padding-top: 2px; text-align: right; color: var(--ai); }
+.options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 360px; }
+.opt { font-family: var(--font-display); font-weight: 800; font-size: 1.8rem; padding: 8px; border-radius: var(--r-md); border: 2px solid var(--line); background: var(--surface); cursor: pointer; font-variant-numeric: tabular-nums; }
+.opt:hover { border-color: var(--ai); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
+.opt.right { border-color: var(--good); background: var(--good-soft); color: var(--good); }
+.feedback { min-height: 1.6em; font-weight: 700; font-size: 1.05rem; padding: 8px 14px; border-radius: var(--r-sm); width: 100%; }
+.feedback:empty { padding: 0; }
+.feedback.ok { background: var(--good-soft); color: var(--good); }
+.feedback.no { background: var(--bad-soft); color: var(--bad); }
+.feedback.info { background: var(--ai-soft); color: var(--ai); }
+.hint-box { width: 100%; text-align: left; background: var(--surface-2); border-radius: var(--r-sm); padding: 12px 14px; display: grid; gap: 8px; }
+.hint-box h4 { font-size: 1rem; }
+
+.flash-stage { width: 100%; min-height: 200px; display: grid; place-items: center; background: var(--surface-2); border-radius: var(--r-md); }
+.flash-num { font-family: var(--font-display); font-weight: 800; font-size: clamp(4rem, 18vw, 7rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.flash-num.minus { color: var(--bad); }
+.flash-num.plus { color: var(--ai); }
+.flash-num.pop { animation: pop .22s ease-out; }
+@keyframes pop { from { transform: scale(.7); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+.answer-input { font-family: var(--font-display); font-size: 2.4rem; font-weight: 800; width: 180px; max-width: 100%; text-align: center; border: 2px solid var(--line); border-radius: var(--r-md); padding: 4px 8px; background: var(--surface); color: var(--ink); font-variant-numeric: tabular-nums; }
+.answer-input:focus { border-color: var(--ai); outline: none; }
+.keypad { display: grid; grid-template-columns: repeat(3, 64px); gap: 8px; }
+.keypad button { height: 52px; border-radius: var(--r-sm); border: 1.5px solid var(--line); background: var(--surface); font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; cursor: pointer; }
+.keypad button:hover { border-color: var(--ai); }
+.keypad .ok { background: var(--ai); color: var(--on-ai); border-color: var(--ai); font-size: 1rem; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: none; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: .88rem; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ai); box-shadow: var(--shadow); }
+
+.result { text-align: center; display: grid; gap: 14px; justify-items: center; }
+.result .big-stars { font-size: 3.4rem; letter-spacing: 8px; line-height: 1; }
+.result .big-stars span { display: inline-block; color: var(--line); }
+.result .big-stars span.on { color: var(--gold); animation: starIn .5s cubic-bezier(.2, 1.6, .5, 1) both; }
+.result .big-stars span:nth-child(2) { animation-delay: .25s; }
+.result .big-stars span:nth-child(3) { animation-delay: .5s; }
+@keyframes starIn { from { transform: scale(0) rotate(-40deg); } to { transform: scale(1) rotate(0); } }
+.result h2 { font-size: 2rem; }
+.result .score { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- Bài viết phụ huynh ---------- */
+.article { display: grid; gap: 16px; }
+.article .panel p { color: var(--ink); margin-bottom: 10px; }
+.article .panel p:last-child { margin-bottom: 0; }
+.article h2 { font-size: 1.45rem; margin-bottom: 10px; }
+.article .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.data-table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+.data-table th, .data-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.data-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.data-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.confirm { background: var(--bad-soft); color: var(--bad); border-radius: var(--r-sm); padding: 12px; display: grid; gap: 10px; }
+.switch-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 8px; border-bottom: 1px solid var(--line); }
+.switch-row:last-child { border-bottom: 0; }
+
+.free { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 20px; align-items: start; }
+.free-board { display: grid; justify-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 24px 12px; box-shadow: var(--shadow); min-width: 0; }
+.field { display: grid; gap: 4px; font-size: .85rem; font-weight: 600; color: var(--muted); }
+.field input, .field select { font: inherit; font-size: 1.1rem; font-weight: 700; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-sm); padding: 6px 10px; width: 100%; }
+.calc-form { display: grid; grid-template-columns: 1fr 70px 1fr; gap: 8px; align-items: end; }
+
+.footer { color: var(--muted); font-size: .82rem; text-align: center; padding-block: 24px; }
+
+@media (max-width: 760px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .lesson { grid-template-columns: minmax(0, 1fr); }
+  .guide { grid-template-columns: minmax(0, 1fr); }
+  .free { grid-template-columns: minmax(0, 1fr); }
+  .nav button { padding: 6px 9px; }
+  .star-total { margin-left: auto; }
+  .nav { order: 3; width: 100%; margin-left: 0; justify-content: space-between; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <button class="brand" data-action="nav" data-to="home" aria-label="Trang chủ">
+      <span class="brand-mark"><span></span></span>
+      <b>Soroban</b>
+    </button>
+    <nav class="nav" id="nav">
+      <button data-action="nav" data-to="home">Cấp độ</button>
+      <button data-action="nav" data-to="free">Bàn tính tự do</button>
+      <button data-action="nav" data-to="parents">Phụ huynh</button>
+    </nav>
+    <span class="star-total" id="starTotal" title="Tổng số sao">★ 0</span>
+  </div>
+</header>
+<main class="wrap" id="app"></main>
+<footer class="footer wrap">Bàn Tính Soroban · Học tính toán theo phương pháp Nhật Bản · Tiến độ được lưu trên trình duyệt này</footer>
+
+<script>
+"use strict";
+
+/* =========================================================
+   Tiện ích
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const PLACE = ['đơn vị', 'chục', 'trăm', 'nghìn', 'chục nghìn', 'trăm nghìn', 'triệu'];
+const PLACE_LABEL = ['Đơn vị', 'Chục', 'Trăm', 'Nghìn', 'Ch.nghìn', 'Tr.nghìn', 'Triệu'];
+const W = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+
+function readVi(n) {
+  if (n < 10) return W[n];
+  if (n < 100) {
+    const t = Math.floor(n / 10), u = n % 10;
+    const tens = t === 1 ? 'mười' : W[t] + ' mươi';
+    if (u === 0) return tens;
+    if (u === 1 && t > 1) return tens + ' mốt';
+    if (u === 5) return tens + ' lăm';
+    if (u === 4 && t > 1) return tens + ' tư';
+    return tens + ' ' + W[u];
+  }
+  if (n < 1000) {
+    const h = Math.floor(n / 100), r = n % 100;
+    if (r === 0) return W[h] + ' trăm';
+    if (r < 10) return W[h] + ' trăm linh ' + W[r];
+    return W[h] + ' trăm ' + readVi(r);
+  }
+  return String(n);
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const toDigits = (n, len) => { const d = []; for (let i = 0; i < len; i++) { d.push(n % 10); n = Math.floor(n / 10); } return d; };
+const fromDigits = d => d.reduce((s, x, i) => s + x * Math.pow(10, i), 0);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const starsHtml = (n, total = 3) => `<span class="stars" aria-label="${n} trên ${total} sao">${'★'.repeat(n)}<span class="off">${'★'.repeat(total - n)}</span></span>`;
+const fmtOp = (sign, n) => (sign > 0 ? '+' : '−') + n;
+
+/* =========================================================
+   Âm thanh (chỉ phát sau khi người dùng bấm)
+   ========================================================= */
+const Sound = {
+  ctx: null,
+  ensure() {
+    if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { this.ctx = null; } }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    return this.ctx;
+  },
+  tone(freq, dur, type = 'sine', vol = .08, delay = 0) {
+    if (!progress.sound) return;
+    const ctx = this.ensure(); if (!ctx) return;
+    const t = ctx.currentTime + delay;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + dur + .02);
+  },
+  click() { this.tone(1500, .035, 'square', .025); this.tone(700, .05, 'triangle', .04); },
+  good() { this.tone(660, .14, 'sine', .09); this.tone(880, .22, 'sine', .09, .12); },
+  bad() { this.tone(240, .22, 'triangle', .09); this.tone(180, .25, 'triangle', .07, .12); },
+  win() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, .22, 'sine', .08, i * .13)); }
+};
+
+/* =========================================================
+   Lưu tiến độ (localStorage — có thể không khả dụng)
+   ========================================================= */
+const STORE_KEY = 'soroban-progress-v1';
+function loadProgress() {
+  let d = {};
+  try { d = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { d = {}; }
+  return Object.assign({ levels: {}, sound: true, unlockAll: false, speed: 'slow' }, d);
+}
+function saveProgress() { try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) { /* bỏ qua */ } }
+let progress = loadProgress();
+
+/* =========================================================
+   Bàn tính
+   ========================================================= */
+class Abacus {
+  constructor(el, opts = {}) {
+    this.el = el;
+    this.rods = opts.rods || 3;
+    this.interactive = opts.interactive !== false;
+    this.onChange = opts.onChange || (() => {});
+    this.labels = opts.labels !== false;
+    this.big = !!opts.big;
+    this.digits = new Array(this.rods).fill(0);
+    this.build();
+    if (opts.value) this.setValue(opts.value, true);
+  }
+  build() {
+    const cols = [];
+    for (let i = this.rods - 1; i >= 0; i--) {
+      let earth = '';
+      for (let k = 0; k < 4; k++) earth += `<div class="bead e" data-rod="${i}" data-b="${k}" style="--k:${k}"></div>`;
+      cols.push(`<div class="ab-col" data-rod="${i}" tabindex="${this.interactive ? 0 : -1}" role="group" aria-label="Cột ${PLACE[i]}">
+        <div class="ab-heaven"><div class="bead h" data-rod="${i}" data-b="h"></div></div>
+        <div class="ab-beam">${i % 3 === 0 ? '<span class="ab-dot"></span>' : ''}</div>
+        <div class="ab-earth">${earth}</div></div>`);
+    }
+    const labels = [];
+    for (let i = this.rods - 1; i >= 0; i--) labels.push(`<span>${PLACE_LABEL[i] || ''}</span>`);
+    this.el.innerHTML = `<div class="abacus${this.big ? ' big' : ''}${this.interactive ? '' : ' locked'}">
+      <div class="ab-frame"><div class="ab-cols">${cols.join('')}</div></div>
+      ${this.labels ? `<div class="ab-labels" aria-hidden="true">${labels.join('')}</div>` : ''}</div>`;
+    this.root = this.el.firstElementChild;
+    this.root.addEventListener('click', e => this.handleClick(e));
+    this.root.addEventListener('keydown', e => this.handleKey(e));
+    this.render();
+  }
+  setInteractive(v) {
+    this.interactive = v;
+    this.root.classList.toggle('locked', !v);
+    this.root.querySelectorAll('.ab-col').forEach(c => c.tabIndex = v ? 0 : -1);
+  }
+  handleClick(e) {
+    if (!this.interactive) return;
+    const b = e.target.closest('.bead'); if (!b) return;
+    const i = +b.dataset.rod; let d = this.digits[i];
+    let h = d >= 5, c = d % 5;
+    if (b.dataset.b === 'h') h = !h;
+    else { const k = +b.dataset.b; c = k < c ? k : k + 1; }
+    this.setDigit(i, (h ? 5 : 0) + c);
+  }
+  handleKey(e) {
+    if (!this.interactive) return;
+    const col = e.target.closest('.ab-col'); if (!col) return;
+    const i = +col.dataset.rod, d = this.digits[i];
+    if (e.key === 'ArrowUp') { e.preventDefault(); this.setDigit(i, Math.min(9, d + 1)); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); this.setDigit(i, Math.max(0, d - 1)); }
+    else if (/^[0-9]$/.test(e.key)) { e.preventDefault(); this.setDigit(i, +e.key); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = this.root.querySelector(`.ab-col[data-rod="${i + (e.key === 'ArrowLeft' ? 1 : -1)}"]`);
+      if (next) next.focus();
+    }
+  }
+  setDigit(i, v, silent) {
+    if (this.digits[i] === v) return;
+    this.digits[i] = v;
+    this.render();
+    if (!silent) { Sound.click(); this.onChange(this.getValue()); }
+  }
+  setDigits(arr) { for (let i = 0; i < this.rods; i++) this.digits[i] = arr[i] || 0; this.render(); }
+  setValue(n, silent) { this.setDigits(toDigits(n, this.rods)); if (!silent) this.onChange(this.getValue()); }
+  getValue() { return fromDigits(this.digits); }
+  flashRod(i) {
+    this.root.querySelectorAll('.ab-col.flash').forEach(c => c.classList.remove('flash'));
+    if (i == null) return;
+    const c = this.root.querySelector(`.ab-col[data-rod="${i}"]`); if (c) c.classList.add('flash');
+  }
+  render() {
+    this.root.querySelectorAll('.ab-col').forEach(col => {
+      const i = +col.dataset.rod, d = this.digits[i];
+      col.querySelector('.bead.h').classList.toggle('on', d >= 5);
+      col.querySelectorAll('.bead.e').forEach(b => b.classList.toggle('on', +b.dataset.b < d % 5));
+      col.setAttribute('aria-label', `Cột ${PLACE[i]}: ${d}`);
+    });
+  }
+}
+
+/* =========================================================
+   "Bộ não" Soroban: tách một phép tính thành từng bước gạt hạt
+   (trực tiếp, bạn nhỏ = hợp 5, bạn lớn = hợp 10, kết hợp)
+   ========================================================= */
+function canAddDirect(d, n) { if (d + n > 9) return false; if (d >= 5 && n >= 5) return false; return (d % 5) + (n % 5) <= 4; }
+function canSubDirect(d, n) { if (d < n) return false; if (n >= 5 && d < 5) return false; return (d % 5) >= (n % 5); }
+function movesAdd(n) { const p = []; if (n >= 5) p.push('gạt hạt trên xuống'); if (n % 5) p.push(`đẩy ${n % 5} hạt dưới lên`); return p.join(' và '); }
+function movesSub(n) { const p = []; if (n >= 5) p.push('gạt hạt trên lên'); if (n % 5) p.push(`kéo ${n % 5} hạt dưới xuống`); return p.join(' và '); }
+
+function planCalc(start, ops, rods = 5) {
+  const v = toDigits(start, rods + 2);
+  const steps = [], kinds = new Set();
+  const push = (text, kind, rod) => { steps.push({ text, kind, rod, digits: v.slice() }); if (kind && kind !== 'head') kinds.add(kind); };
+
+  function add(p, n, prefix = '') {
+    const d = v[p], pl = PLACE[p];
+    if (d + n <= 9) {
+      if (canAddDirect(d, n)) { v[p] += n; push(`${prefix}Cột ${pl}: +${n} → ${movesAdd(n)}.`, 'direct', p); }
+      else { v[p] += n; push(`${prefix}Cột ${pl}: +${n} nhưng không đủ hạt dưới → <b>bạn nhỏ</b>: +${n} = +5 − ${5 - n}. Gạt hạt trên xuống, kéo ${5 - n} hạt dưới xuống.`, 'five', p); }
+    } else {
+      const c = 10 - n, direct = canSubDirect(d, c);
+      const inner = direct ? `bớt ${c}: ${movesSub(c)}` : `bớt ${c} bằng bạn nhỏ (−${c} = +${5 - c} − 5): đẩy ${5 - c} hạt dưới lên, gạt hạt trên lên`;
+      v[p] -= c;
+      push(`${prefix}Cột ${pl}: +${n} vượt quá 9 → <b>bạn lớn</b>: +${n} = −${c} + 10. Ở cột ${pl} ${inner}.`, 'ten', p);
+      if (!direct) kinds.add('mixed');
+      add(p + 1, 1, 'Nhớ 1 → ');
+    }
+  }
+  function sub(p, n, prefix = '') {
+    const d = v[p], pl = PLACE[p];
+    if (d >= n) {
+      if (canSubDirect(d, n)) { v[p] -= n; push(`${prefix}Cột ${pl}: −${n} → ${movesSub(n)}.`, 'direct', p); }
+      else { v[p] -= n; push(`${prefix}Cột ${pl}: −${n} nhưng không đủ hạt dưới → <b>bạn nhỏ</b>: −${n} = +${5 - n} − 5. Đẩy ${5 - n} hạt dưới lên, gạt hạt trên lên.`, 'five', p); }
+    } else {
+      const c = 10 - n;
+      push(`${prefix}Cột ${pl}: −${n} nhưng không đủ hạt → <b>bạn lớn</b>: −${n} = −10 + ${c}.`, 'ten', p);
+      sub(p + 1, 1, 'Mượn 1 → ');
+      const d2 = v[p];
+      if (canAddDirect(d2, c)) { v[p] += c; push(`Cột ${pl}: thêm bạn lớn ${c} → ${movesAdd(c)}.`, 'ten', p); }
+      else { v[p] += c; kinds.add('mixed'); push(`Cột ${pl}: thêm bạn lớn ${c} bằng bạn nhỏ (+${c} = +5 − ${5 - c}): gạt hạt trên xuống, kéo ${5 - c} hạt dưới xuống.`, 'ten', p); }
+    }
+  }
+
+  steps.push({ text: `Bắt đầu: bàn tính có số ${start}.`, kind: 'head', rod: null, digits: v.slice() });
+  ops.forEach(({ sign, n }) => {
+    push(`${sign > 0 ? 'Cộng' : 'Trừ'} ${n}${n >= 10 ? ' — làm cột trái trước, cột phải sau' : ''}:`, 'head', null);
+    const nd = String(n).split('').map(Number).reverse();
+    for (let p = nd.length - 1; p >= 0; p--) {
+      if (!nd[p]) continue;
+      sign > 0 ? add(p, nd[p]) : sub(p, nd[p]);
+    }
+  });
+  return { steps, kinds, result: fromDigits(v) };
+}
+
+/* Tạo đề tính toán có kiểm soát loại kỹ thuật cần dùng */
+function genCalc(maker, filter, maxResult = 999) {
+  for (let t = 0; t < 1500; t++) {
+    const q = maker();
+    let run = q.start, ok = q.start >= 0;
+    for (const o of q.ops) { run += o.sign * o.n; if (run < 0) { ok = false; break; } }
+    if (!ok || run > maxResult) continue;
+    const plan = planCalc(q.start, q.ops);
+    if (filter(plan.kinds)) return { type: 'calc', start: q.start, ops: q.ops, answer: plan.result, plan };
+  }
+  return null;
+}
+const onlyDirect = k => k.size > 0 && [...k].every(x => x === 'direct');
+const needFive = k => k.has('five') && !k.has('ten');
+const needTen = k => k.has('ten');
+
+function genAnzan(count, maxN, maxTotal) {
+  for (let t = 0; t < 500; t++) {
+    const nums = [{ sign: 1, n: rnd(1, maxN) }];
+    let run = nums[0].n, ok = true;
+    for (let i = 1; i < count; i++) {
+      const sign = Math.random() < .6 ? 1 : -1, n = rnd(1, maxN);
+      run += sign * n; if (run < 0 || run > maxTotal) { ok = false; break; }
+      nums.push({ sign, n });
+    }
+    if (ok) return { type: 'anzan', nums, answer: run };
+  }
+  return { type: 'anzan', nums: [{ sign: 1, n: 3 }, { sign: 1, n: 4 }], answer: 7 };
+}
+function readOptions(ans, max) {
+  const set = new Set([ans]);
+  const cands = [ans + 1, ans - 1, ans + 5, ans - 5, ans + 10, ans - 10, +String(ans).split('').reverse().join(''), ans + 50, ans - 50];
+  for (const c of shuffle(cands)) { if (set.size >= 4) break; if (c >= 0 && c <= max && c !== ans) set.add(c); }
+  while (set.size < 4) set.add(rnd(0, max));
+  return shuffle([...set]);
+}
+
+/* =========================================================
+   Nội dung các cấp độ
+   ========================================================= */
+const FIVE_TABLE = `<div class="table-scroll"><table class="mini-table"><tr><th>Số</th><td>1</td><td>2</td><td>3</td><td>4</td></tr><tr><th>Bạn nhỏ</th><td>4</td><td>3</td><td>2</td><td>1</td></tr></table></div>`;
+const TEN_TABLE = `<div class="table-scroll"><table class="mini-table"><tr><th>Số</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td></tr><tr><th>Bạn lớn</th><td>9</td><td>8</td><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td></tr></table></div>`;
+
+const LEVELS = [
+  {
+    id: 1, kyu: '10 kyū', name: 'Làm quen bàn tính', short: 'Hạt trên, hạt dưới và cách đặt số 0 đến 9.',
+    type: 'set', rods: 2, count: 9,
+    gen: () => ({ type: 'set', answer: rnd(1, 9) }),
+    lesson: [
+      { title: 'Bàn tính có gì?', body: ['Thanh gỗ nằm ngang ở giữa gọi là <b>xà ngang</b>.', 'Mỗi cột có <b>1 hạt trên</b> — hạt này bằng <b>5</b>, và <b>4 hạt dưới</b> — mỗi hạt bằng <b>1</b>.', 'Quy tắc vàng: hạt chỉ được đếm khi <b>chạm vào xà ngang</b>. Con hãy bấm thử vào các hạt nhé!'], demo: { kind: 'free', rods: 1 } },
+      { title: 'Số 1, 2, 3, 4', body: ['Dùng <b>ngón cái</b> đẩy hạt dưới lên chạm xà ngang.', 'Một hạt là 1, hai hạt là 2… bốn hạt là 4.'], demo: { kind: 'seq', rods: 1, values: [0, 1, 2, 3, 4] } },
+      { title: 'Số 5', body: ['Dùng <b>ngón trỏ</b> gạt hạt trên xuống chạm xà ngang. Một hạt trên bằng 5!', 'Lúc này các hạt dưới đều nằm yên ở dưới.'], demo: { kind: 'seq', rods: 1, values: [0, 5] } },
+      { title: 'Số 6, 7, 8, 9', body: ['Số 6 là <b>5 và 1</b>: gạt hạt trên xuống, đẩy 1 hạt dưới lên.', 'Số 9 là <b>5 và 4</b>: hạt trên xuống, cả 4 hạt dưới lên.', 'Mẹo: với số 6–9, có thể dùng ngón cái và ngón trỏ "kẹp" cùng lúc.'], demo: { kind: 'seq', rods: 1, values: [5, 6, 7, 8, 9] } },
+      { title: 'Xóa bàn tính', body: ['Trước mỗi bài, bàn tính phải về <b>0</b>: hạt trên đẩy lên hết, hạt dưới kéo xuống hết.', 'Khi đã sẵn sàng, bấm sang thẻ <b>Luyện tập</b> để nhận sao!'], demo: null }
+    ],
+    guide: {
+      goal: 'Con biết cấu tạo bàn tính, hiểu hạt trên bằng 5, hạt dưới bằng 1, và đặt được các số từ 0 đến 9 trên một cột.',
+      time: '3–5 buổi, mỗi buổi 10–15 phút',
+      steps: [
+        'Giới thiệu bàn tính (thật hoặc trên màn hình): xà ngang, hạt trên, hạt dưới. Cho con tự bấm thử ở thẻ "Bài học".',
+        'Nhấn mạnh quy tắc vàng: chỉ đếm những hạt chạm xà ngang.',
+        'Tập ngón tay: ngón cái đẩy hạt dưới lên; ngón trỏ kéo hạt dưới xuống và gạt hạt trên (cả lên lẫn xuống).',
+        'Bố mẹ đọc một số, con đặt số đó rồi đọc to lại: "Số 7 — một hạt trên, hai hạt dưới".',
+        'Khi con đặt đúng liên tục, chuyển sang "Luyện tập". Đạt từ 1 sao là mở khóa cấp sau.'
+      ],
+      mistakes: ['Đếm cả những hạt nằm xa xà ngang.', 'Dùng một ngón tay cho mọi động tác (nên tách ngón cái – ngón trỏ ngay từ đầu).', 'Quên xóa bàn tính về 0 trước khi đặt số mới.'],
+      say: ['"Hạt nào chạm xà ngang thì mới được đếm nhé!"', '"Số 7 là 5 với 2: một hạt trên, hai hạt dưới."', '"Con làm chậm mà đúng là giỏi nhất!"']
+    }
+  },
+  {
+    id: 2, kyu: '9 kyū', name: 'Đọc số trên bàn tính', short: 'Nhìn bàn tính và nói ra số từ 0 đến 99.',
+    type: 'read', rods: 3, count: 10,
+    gen: i => { const a = i < 3 ? rnd(1, 9) : rnd(10, 99); return { type: 'read', answer: a, options: readOptions(a, 99) }; },
+    lesson: [
+      { title: 'Mỗi cột là một hàng', body: ['Cột bên phải cùng là hàng <b>đơn vị</b>, cột bên trái nó là hàng <b>chục</b>, rồi đến hàng <b>trăm</b>.', 'Dấu chấm nhỏ trên xà ngang giúp con tìm ra cột đơn vị.'], demo: { kind: 'seq', rods: 3, values: [3, 30, 33, 300] } },
+      { title: 'Đọc từ trái sang phải', body: ['Giống như đọc chữ: nhìn cột chục trước, rồi cột đơn vị.', 'Ví dụ: cột chục có 3, cột đơn vị có 5 → đọc là <b>ba mươi lăm</b>.'], demo: { kind: 'seq', rods: 3, values: [12, 35, 48, 76, 99] } },
+      { title: 'Cột trống là số 0', body: ['Nếu một cột không có hạt nào chạm xà ngang, cột đó là <b>0</b>.', 'Số 70: cột chục có 7, cột đơn vị trống. Số 7: chỉ cột đơn vị có hạt.'], demo: { kind: 'seq', rods: 3, values: [7, 70, 40, 4] } }
+    ],
+    guide: {
+      goal: 'Con đọc được số từ 0 đến 99 trên bàn tính, hiểu mỗi cột là một hàng (đơn vị, chục).',
+      time: '2–4 buổi',
+      steps: [
+        'Chỉ cho con dấu chấm trên xà ngang: cột có dấu chấm (ngoài cùng bên phải trong trò chơi) là cột đơn vị.',
+        'Đọc từ trái sang phải: cột chục trước, cột đơn vị sau.',
+        'Chơi "đổi vai": bố mẹ đặt số, con đọc; rồi con đặt, bố mẹ đọc (thỉnh thoảng cố tình đọc sai để con sửa).',
+        'Ở phần Luyện tập, con chọn 1 trong 4 đáp án. Chỉ tính điểm khi chọn đúng ngay lần đầu.'
+      ],
+      mistakes: ['Đọc ngược thứ tự (35 thành 53).', 'Bỏ qua cột trống: 70 đọc thành 7.', 'Nhầm hạt trên (5) thành 1.'],
+      say: ['"Cột chục có mấy? Cột đơn vị có mấy? Ghép lại là số nào?"', '"Cột này không có hạt nào chạm xà — vậy là số mấy?"']
+    }
+  },
+  {
+    id: 3, kyu: '8 kyū', name: 'Đặt số lớn', short: 'Đặt số có 2 và 3 chữ số, kể cả số có 0 ở giữa.',
+    type: 'set', rods: 4, count: 10,
+    gen: i => { if (i < 3) return { type: 'set', answer: rnd(10, 99) }; if (i % 3 === 0) return { type: 'set', answer: rnd(1, 9) * 100 + rnd(1, 9) }; return { type: 'set', answer: rnd(100, 999) }; },
+    lesson: [
+      { title: 'Tìm cột đơn vị trước', body: ['Luôn bắt đầu bằng việc tìm cột đơn vị (có dấu chấm).', 'Đếm sang trái: đơn vị → chục → trăm.'], demo: { kind: 'seq', rods: 4, values: [5, 50, 500] } },
+      { title: 'Đặt từ trái sang phải', body: ['Giống khi viết số: chữ số đầu tiên đặt ở cột bên trái.', 'Số 247: cột trăm đặt 2, cột chục đặt 4, cột đơn vị đặt 7.'], demo: { kind: 'seq', rods: 4, values: [200, 240, 247] } },
+      { title: 'Số có 0 ở giữa', body: ['Số 305 đọc là "ba trăm <b>linh</b> năm": cột chục để trống.', 'Đừng quên cột trống — nó giữ đúng chỗ cho các chữ số khác.'], demo: { kind: 'seq', rods: 4, values: [305, 408, 820, 900] } }
+    ],
+    guide: {
+      goal: 'Đặt được số có 2–3 chữ số, kể cả số có chữ số 0 ở giữa hoặc cuối (305, 820).',
+      time: '2–4 buổi',
+      steps: [
+        'Nhắc con xác định cột đơn vị trước, sau đó đếm sang trái.',
+        'Đặt từ trái sang phải, đọc to từng chữ số khi đặt: "hai trăm — bốn chục — bảy đơn vị".',
+        'Với số có 0 ở giữa, hỏi con: "Cột chục cần mấy hạt?" để con tự nhận ra cột trống.',
+        'Trò chơi hiển thị cả cách đọc bằng chữ — hãy cho con đọc theo để luyện đọc số.'
+      ],
+      mistakes: ['Đặt lệch cột (247 đặt thành 2470).', 'Không để trống cột có chữ số 0.'],
+      say: ['"Số này có mấy chữ số? Vậy mình bắt đầu từ cột nào?"', '"Chữ số 0 thì cột đó để trống nhé."']
+    }
+  },
+  {
+    id: 4, kyu: '7 kyū', name: 'Cộng trừ trực tiếp', short: 'Cộng, trừ khi đủ hạt để gạt thẳng — chưa cần công thức.',
+    type: 'calc', rods: 3, count: 10,
+    gen: i => genCalc(() => {
+      const sign = Math.random() < .55 ? 1 : -1;
+      if (i < 6) return { start: rnd(1, 9), ops: [{ sign, n: rnd(1, 9) }] };
+      return { start: rnd(10, 89), ops: [{ sign, n: rnd(10, 60) }] };
+    }, onlyDirect, 99),
+    lesson: [
+      { title: 'Cộng là gạt hạt vào', body: ['Muốn cộng, con gạt thêm hạt <b>vào sát xà ngang</b>.', 'Ví dụ 2 + 2: đã có 2 hạt dưới, đẩy thêm 2 hạt dưới lên → 4.'], demo: { kind: 'plan', rods: 2, start: 2, ops: [{ sign: 1, n: 2 }] } },
+      { title: 'Cộng với số 5 trở lên', body: ['1 + 5: gạt hạt trên xuống là xong.', '3 + 6: 6 là 5 và 1 → gạt hạt trên xuống, đẩy 1 hạt dưới lên.'], demo: { kind: 'plan', rods: 2, start: 3, ops: [{ sign: 1, n: 6 }] } },
+      { title: 'Trừ là gạt hạt ra', body: ['Muốn trừ, con gạt hạt <b>ra xa xà ngang</b>.', '8 − 7: 7 là 5 và 2 → gạt hạt trên lên, kéo 2 hạt dưới xuống.'], demo: { kind: 'plan', rods: 2, start: 8, ops: [{ sign: -1, n: 7 }] } },
+      { title: 'Số hai chữ số: cột trái trước', body: ['Soroban luôn tính <b>từ trái sang phải</b>: cột chục trước, cột đơn vị sau.', '12 + 35: cột chục +3, rồi cột đơn vị +5.'], demo: { kind: 'plan', rods: 3, start: 12, ops: [{ sign: 1, n: 35 }] } }
+    ],
+    guide: {
+      goal: 'Con cộng, trừ được khi có đủ hạt để gạt trực tiếp (chưa cần bạn nhỏ, bạn lớn).',
+      time: '4–6 buổi',
+      steps: [
+        'Giải thích: cộng là gạt hạt vào xà ngang, trừ là gạt hạt ra xa xà ngang.',
+        'Trong Luyện tập, bàn tính đã đặt sẵn số thứ nhất. Con chỉ gạt số thứ hai rồi bấm "Kiểm tra". Số trên bàn tính được ẩn để con tự đọc kết quả.',
+        'Với số hai chữ số, luôn làm cột chục trước, cột đơn vị sau. Đây là thói quen quan trọng của Soroban (ngược với tính viết).',
+        'Yêu cầu con gạt từng bước dù đã biết kết quả trong đầu — mục tiêu là luyện tay, chưa phải tính nhẩm.',
+        'Khi con bí, bấm "Gợi ý" để xem từng bước (câu đó sẽ không được tính điểm).'
+      ],
+      mistakes: ['Nhẩm ra kết quả rồi đặt thẳng, bỏ qua việc gạt.', 'Làm cột đơn vị trước.', 'Lẫn lộn chiều gạt khi trừ.'],
+      say: ['"Cộng thì hạt đi vào, trừ thì hạt đi ra."', '"Cột nào trước nhỉ? Đúng rồi, cột bên trái!"']
+    }
+  },
+  {
+    id: 5, kyu: '6 kyū', name: 'Bạn nhỏ (hợp 5)', short: 'Khi thiếu hạt dưới: mượn hạt trên bằng cặp số cộng lại bằng 5.',
+    type: 'calc', rods: 3, count: 10,
+    gen: i => genCalc(() => {
+      const sign = Math.random() < .55 ? 1 : -1;
+      if (i < 7) return { start: rnd(1, 9), ops: [{ sign, n: rnd(1, 4) }] };
+      return { start: rnd(11, 49), ops: [{ sign, n: rnd(1, 4) + (Math.random() < .5 ? rnd(1, 3) * 10 : 0) }] };
+    }, needFive, 99),
+    lesson: [
+      { title: 'Bạn nhỏ là gì?', body: ['Hai số cộng lại bằng <b>5</b> là "bạn nhỏ" của nhau.', FIVE_TABLE, 'Con hãy đọc to: một – bốn, hai – ba!'], demo: null },
+      { title: 'Cộng khi thiếu hạt dưới', body: ['4 + 1: cột đã có 4 hạt dưới, không còn hạt để đẩy lên.', 'Ta nói: <b>cộng 1 = cộng 5, trừ 4</b> (4 là bạn nhỏ của 1).', 'Gạt hạt trên xuống, kéo 4 hạt dưới xuống → 5.'], demo: { kind: 'plan', rods: 2, start: 4, ops: [{ sign: 1, n: 1 }] } },
+      { title: 'Thêm một ví dụ', body: ['3 + 4: chỉ còn 1 hạt dưới trống.', '<b>Cộng 4 = cộng 5, trừ 1</b>.'], demo: { kind: 'plan', rods: 2, start: 3, ops: [{ sign: 1, n: 4 }] } },
+      { title: 'Trừ khi thiếu hạt dưới', body: ['5 − 1: không có hạt dưới để bớt.', 'Ta nói: <b>trừ 1 = cộng 4, trừ 5</b>. Đẩy 4 hạt dưới lên, rồi gạt hạt trên lên → 4.'], demo: { kind: 'plan', rods: 2, start: 5, ops: [{ sign: -1, n: 1 }] } },
+      { title: 'Trừ thêm lần nữa', body: ['7 − 3: chỉ có 2 hạt dưới.', '<b>Trừ 3 = cộng 2, trừ 5</b>.'], demo: { kind: 'plan', rods: 2, start: 7, ops: [{ sign: -1, n: 3 }] } }
+    ],
+    guide: {
+      goal: 'Con thuộc các cặp "bạn nhỏ" (1–4, 2–3) và dùng được khi cột thiếu hạt dưới.',
+      time: '1–2 tuần, 10–15 phút mỗi ngày',
+      steps: [
+        'Học thuộc cặp bạn nhỏ bằng trò đối đáp: bố mẹ nói "1", con đáp "4"; bố mẹ nói "3", con đáp "2". Chơi đến khi con trả lời không cần nghĩ.',
+        'Xem các ví dụ minh họa trong "Bài học" cùng con, đọc to công thức: "Cộng 3 bằng cộng 5 trừ 2".',
+        'Thứ tự tay khi CỘNG: gạt hạt trên xuống trước, kéo hạt dưới xuống sau.',
+        'Thứ tự tay khi TRỪ: đẩy hạt dưới lên trước, gạt hạt trên lên sau.',
+        'Nút "Gợi ý" đọc từng bước cho con. Khuyến khích con tự làm, chỉ dùng gợi ý khi thật sự bí.'
+      ],
+      mistakes: ['Nhớ sai cặp bạn nhỏ (1 với 3...).', 'Dùng bạn nhỏ cả khi có thể gạt trực tiếp.', 'Làm ngược thứ tự tay.'],
+      say: ['"Còn đủ hạt dưới không? Không đủ thì gọi ai giúp? — Bạn nhỏ!"', '"Bạn nhỏ của 4 là mấy?"']
+    }
+  },
+  {
+    id: 6, kyu: '5 kyū', name: 'Bạn lớn (hợp 10)', short: 'Cộng có nhớ, trừ có mượn bằng cặp số cộng lại bằng 10.',
+    type: 'calc', rods: 3, count: 10,
+    gen: i => genCalc(() => {
+      if (Math.random() < .55) return { start: i < 5 ? rnd(1, 9) : rnd(10, 89), ops: [{ sign: 1, n: rnd(1, 9) }] };
+      return { start: i < 5 ? rnd(10, 18) : rnd(20, 99), ops: [{ sign: -1, n: rnd(1, 9) }] };
+    }, needTen, 99),
+    lesson: [
+      { title: 'Bạn lớn là gì?', body: ['Hai số cộng lại bằng <b>10</b> là "bạn lớn" của nhau.', TEN_TABLE], demo: null },
+      { title: 'Cộng có nhớ', body: ['8 + 3: cột đơn vị không đủ chỗ cho 3.', 'Ta nói: <b>cộng 3 = trừ 7, cộng 10</b> (7 là bạn lớn của 3).', 'Bớt 7 ở cột đơn vị, rồi thêm 1 ở cột chục.'], demo: { kind: 'plan', rods: 2, start: 8, ops: [{ sign: 1, n: 3 }] } },
+      { title: 'Trừ có mượn', body: ['12 − 5: cột đơn vị chỉ có 2.', 'Ta nói: <b>trừ 5 = trừ 10, cộng 5</b>.', 'Bớt 1 ở cột chục trước, rồi thêm 5 ở cột đơn vị.'], demo: { kind: 'plan', rods: 2, start: 12, ops: [{ sign: -1, n: 5 }] } },
+      { title: 'Khi cần cả bạn nhỏ', body: ['6 + 6: phải bớt 4 (bạn lớn của 6), nhưng cột chỉ có 1 hạt dưới.', 'Bớt 4 bằng bạn nhỏ: cộng 1, trừ 5. Sau đó nhớ 1 sang cột chục.'], demo: { kind: 'plan', rods: 2, start: 6, ops: [{ sign: 1, n: 6 }] } },
+      { title: 'Nhớ liên tiếp', body: ['95 + 7: nhớ 1 vào cột chục, nhưng cột chục đã là 9 — nên lại nhớ tiếp sang cột trăm.'], demo: { kind: 'plan', rods: 3, start: 95, ops: [{ sign: 1, n: 7 }] } }
+    ],
+    guide: {
+      goal: 'Con thuộc các cặp "bạn lớn" (1–9, 2–8, 3–7, 4–6, 5–5), làm được cộng có nhớ và trừ có mượn.',
+      time: '2–3 tuần',
+      steps: [
+        'Trò đối đáp bạn lớn: bố mẹ nói "3", con đáp "7". Chơi xen kẽ với bạn nhỏ để con phân biệt.',
+        'CỘNG khi không đủ chỗ: bớt bạn lớn ở cột này, rồi thêm 1 ở cột bên trái ("trừ bạn lớn, nhớ một").',
+        'TRỪ khi không đủ hạt: bớt 1 ở cột bên trái trước, rồi thêm bạn lớn ở cột này ("mượn một, cộng bạn lớn").',
+        'Một số phép (6 + 6, 13 − 7...) cần dùng cả bạn nhỏ trong khi dùng bạn lớn. Hãy xem ví dụ minh họa thứ 4 cùng con.',
+        'Đây là cấp khó nhất về kỹ thuật tay. Đừng vội — con có thể làm lại nhiều lần để đạt 3 sao.'
+      ],
+      mistakes: ['Quên nhớ (hoặc mượn) 1 ở cột bên trái.', 'Nhầm bạn lớn với bạn nhỏ.', 'Khi trừ, thêm bạn lớn trước rồi mới mượn (thứ tự đúng: mượn trước).'],
+      say: ['"Cột này đủ chỗ không? Không đủ thì gọi bạn lớn!"', '"Cộng 9 là trừ 1, nhớ 1."']
+    }
+  },
+  {
+    id: 7, kyu: '4 kyū', name: 'Dãy tính liên tiếp', short: 'Cộng trừ liên tiếp 3 số có hai chữ số như đề thi Soroban.',
+    type: 'calc', rods: 4, count: 8,
+    gen: () => genCalc(() => ({ start: rnd(10, 70), ops: [{ sign: Math.random() < .6 ? 1 : -1, n: rnd(11, 59) }, { sign: Math.random() < .5 ? 1 : -1, n: rnd(11, 49) }] }), k => k.size > 1, 199),
+    lesson: [
+      { title: 'Đề viết theo cột dọc', body: ['Đề thi Soroban thường viết các số thành một cột. Con đọc từ trên xuống và gạt lần lượt từng số.', '<b>Không xóa</b> bàn tính giữa các số — kết quả cứ cộng dồn.'], demo: null },
+      { title: 'Ví dụ: 25 + 38 − 17', body: ['Đặt 25. Cộng 38: cột chục +3, cột đơn vị +8 (bạn lớn).', 'Trừ 17: cột chục −1, cột đơn vị −7 (bạn lớn, mượn 1).'], demo: { kind: 'plan', rods: 3, start: 25, ops: [{ sign: 1, n: 38 }, { sign: -1, n: 17 }] } }
+    ],
+    guide: {
+      goal: 'Con tính liên tiếp dãy 3 số có hai chữ số, kết hợp tất cả quy tắc đã học.',
+      time: '2–4 tuần',
+      steps: [
+        'Cho con đọc to từng số trước khi gạt: "cộng ba mươi tám".',
+        'Mỗi số: cột chục trước, cột đơn vị sau.',
+        'Độ chính xác quan trọng hơn tốc độ. Khi con đạt 3 sao ổn định, có thể bấm giờ cho vui.',
+        'Nếu con sai nhiều ở một kiểu (ví dụ trừ có mượn), quay lại cấp 5 hoặc 6 luyện thêm.'
+      ],
+      mistakes: ['Xóa bàn tính giữa chừng.', 'Bỏ sót một số trong dãy.', 'Lẫn dấu cộng và trừ.'],
+      say: ['"Số tiếp theo là cộng hay trừ?"', '"Làm chậm, gạt chắc tay."']
+    }
+  },
+  {
+    id: 8, kyu: '3 kyū', name: 'Tính nhẩm Anzan', short: 'Hình dung bàn tính trong đầu, tính dãy số một chữ số chạy nhanh.',
+    type: 'anzan', rods: 2, count: 8, flashBase: 1500,
+    gen: i => genAnzan(i < 4 ? 3 : 4, 9, 30),
+    lesson: [
+      { title: 'Bàn tính trong đầu', body: ['<b>Anzan</b> (暗算) nghĩa là tính nhẩm bằng cách <b>tưởng tượng</b> bàn tính.', 'Con nhắm mắt, "nhìn" thấy bàn tính đang ở số 0.'], demo: { kind: 'free', rods: 2 } },
+      { title: 'Ngón tay gạt trong không khí', body: ['Mỗi khi một số hiện ra, con cử động ngón cái, ngón trỏ như đang gạt hạt thật.', 'Hạt trong đầu di chuyển y như trên bàn tính.'], demo: { kind: 'plan', rods: 2, start: 3, ops: [{ sign: 1, n: 4 }, { sign: 1, n: 6 }, { sign: -1, n: 2 }] } },
+      { title: 'Cách chơi', body: ['Các số sẽ lần lượt hiện lên. Số màu xanh là cộng, số màu đỏ là trừ.', 'Khi hết số, con gõ kết quả. Bắt đầu với tốc độ <b>Chậm</b> nhé!'], demo: null }
+    ],
+    guide: {
+      goal: 'Con bắt đầu tính nhẩm bằng hình ảnh bàn tính trong đầu (Anzan).',
+      time: 'Luyện song song, 5 phút mỗi ngày trong nhiều tuần',
+      steps: [
+        'Chỉ bắt đầu khi con đã vững cấp 6 (bạn lớn). Anzan là "chụp ảnh" động tác tay trên bàn tính thật.',
+        'Trước khi chơi, cho con nhắm mắt 10 giây và tưởng tượng bàn tính ở số 0.',
+        'Cho phép con cử động ngón tay trong không khí — đây là cách học đúng, không phải gian lận.',
+        'Bắt đầu tốc độ Chậm. Khi con đúng ít nhất 7/8 câu liên tiếp, tăng lên Vừa rồi Nhanh.',
+        'Nếu con khó hình dung, cho con làm lại cùng dãy số trên bàn tính thật rồi thử nhẩm lại.'
+      ],
+      mistakes: ['Cộng theo kiểu đếm ngón tay thông thường thay vì hình dung hạt.', 'Tăng tốc độ quá sớm khiến con nản.'],
+      say: ['"Con thấy bàn tính trong đầu đang là số mấy?"', '"Ngón tay con gạt hạt nào?"']
+    }
+  },
+  {
+    id: 9, kyu: '2 kyū', name: 'Anzan hai chữ số', short: 'Tính nhẩm dãy 4 số có một hoặc hai chữ số.',
+    type: 'anzan', rods: 3, count: 8, flashBase: 2000,
+    gen: i => genAnzan(4, i < 3 ? 15 : 40, 150),
+    lesson: [
+      { title: 'Hai cột trong đầu', body: ['Bây giờ bàn tính trong đầu có cả cột chục và cột đơn vị.', 'Vẫn giữ thói quen: cột chục trước, cột đơn vị sau.'], demo: { kind: 'plan', rods: 3, start: 23, ops: [{ sign: 1, n: 19 }, { sign: -1, n: 8 }, { sign: 1, n: 35 }] } },
+      { title: 'Bí quyết', body: ['Đọc thầm kết quả sau mỗi số: "hai mươi ba… bốn mươi hai… ba mươi tư…".', 'Nếu quên giữa chừng, không sao — bấm "Xem lại" để chiếu lại dãy số trước khi trả lời.'], demo: null }
+    ],
+    guide: {
+      goal: 'Con tính nhẩm được dãy 4 số có tới hai chữ số.',
+      time: 'Nhiều tuần, tùy từng con',
+      steps: [
+        'Chỉ bắt đầu khi con đạt 3 sao ở cấp 8 với tốc độ Vừa.',
+        'Cho con làm cùng một dãy số trên bàn tính thật trước, sau đó nhẩm.',
+        'Dùng nút "Xem lại" thoải mái trong giai đoạn đầu.',
+        'Luyện ngắn nhưng đều: 5–10 phút mỗi ngày hiệu quả hơn 1 giờ mỗi tuần.'
+      ],
+      mistakes: ['Mất dấu cột chục khi nhớ hoặc mượn.', 'Mệt mỏi — hãy dừng khi con bắt đầu sai nhiều.'],
+      say: ['"Sau số này, bàn tính trong đầu con là bao nhiêu?"', '"Hôm nay con đúng nhiều hơn hôm qua đấy!"']
+    }
+  }
+];
+const SPEEDS = { slow: { label: 'Chậm', k: 1.35 }, mid: { label: 'Vừa', k: 1 }, fast: { label: 'Nhanh', k: .65 } };
+
+/* =========================================================
+   Trạng thái & điều hướng
+   ========================================================= */
+const state = { view: 'home', levelId: 1, tab: 'lesson', session: null, confirmReset: false, free: { rods: 5, show: true } };
+let widgets = [];           // các bàn tính đang hiển thị
+let animToken = 0;          // hủy hoạt ảnh cũ
+let timers = [];
+const clearTimers = () => { timers.forEach(clearTimeout); timers = []; animToken++; };
+const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return t; };
+
+const levelById = id => LEVELS.find(l => l.id === id);
+const levelStars = id => (progress.levels[id] && progress.levels[id].stars) || 0;
+const isUnlocked = id => progress.unlockAll || id === 1 || levelStars(id - 1) >= 1;
+const nextLevelId = () => { const l = LEVELS.find(l => isUnlocked(l.id) && levelStars(l.id) === 0); return l ? l.id : null; };
+const totalStars = () => LEVELS.reduce((s, l) => s + levelStars(l.id), 0);
+
+function go(view, extra = {}) {
+  clearTimers();
+  Object.assign(state, { view }, extra);
+  render();
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+}
+
+function render() {
+  widgets = [];
+  const app = $('#app');
+  document.querySelectorAll('#nav button').forEach(b => {
+    const to = b.dataset.to;
+    const cur = (to === 'home' && (state.view === 'home' || state.view === 'level')) || to === state.view;
+    if (cur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  $('#starTotal').textContent = `★ ${totalStars()}/${LEVELS.length * 3}`;
+  if (state.view === 'home') renderHome(app);
+  else if (state.view === 'level') renderLevel(app);
+  else if (state.view === 'free') renderFree(app);
+  else if (state.view === 'parents') renderParents(app);
+}
+
+/* ---------- Trang chủ ---------- */
+function renderHome(app) {
+  const nid = nextLevelId();
+  const cards = LEVELS.map(l => {
+    const un = isUnlocked(l.id), st = levelStars(l.id), nxt = l.id === nid;
+    return `<button class="level-card${un ? '' : ' locked'}${nxt ? ' next' : ''}" data-action="open-level" data-id="${l.id}" ${un ? '' : 'aria-disabled="true"'}>
+      <div class="lc-top"><span class="lc-num">${l.id}</span><span class="lc-kyu">${l.kyu}</span></div>
+      <div class="lc-name">${l.name}</div>
+      <div class="lc-desc">${l.short}</div>
+      <div class="lc-foot">${un ? starsHtml(st) : '<span>Khóa · cần 1 sao ở cấp trước</span>'}${nxt ? '<span class="tag-next">Học tiếp</span>' : ''}</div>
+    </button>`;
+  }).join('');
+  app.innerHTML = `
+    <section class="hero">
+      <div>
+        <div class="hero-jp" lang="ja">そろばん · SOROBAN</div>
+        <h1>Học bàn tính <em>Nhật Bản</em> từng bước một</h1>
+        <p class="lead">9 cấp độ từ làm quen hạt tính đến tính nhẩm Anzan. Mỗi cấp có bài học minh họa cho con, hướng dẫn riêng cho bố mẹ và phần luyện tập để nhận sao.</p>
+        <div class="row">
+          <button class="btn" data-action="open-level" data-id="${nid || 1}">${nid && nid > 1 ? `Học tiếp cấp ${nid}` : 'Bắt đầu học'}</button>
+          <button class="btn ghost" data-action="nav" data-to="parents">Hướng dẫn cho phụ huynh</button>
+        </div>
+      </div>
+      <div class="hero-abacus">
+        <div class="ab-value" id="heroVal">0</div>
+        <div id="heroAbacus"></div>
+        <p class="hero-note">Bấm vào hạt để gạt thử. Hạt trên = 5, mỗi hạt dưới = 1.</p>
+      </div>
+    </section>
+    <div class="section-head"><h2>Các cấp độ</h2><p>Đạt ít nhất 1 sao để mở khóa cấp tiếp theo.</p></div>
+    <div class="levels">${cards}</div>
+    <div class="home-extra">
+      <div class="panel"><h3>Bàn tính tự do</h3><p>Gạt thoải mái hoặc nhập một phép tính để xem máy hướng dẫn từng bước gạt hạt.</p><button class="btn soft small" data-action="nav" data-to="free">Mở bàn tính</button></div>
+      <div class="panel"><h3>Dành cho bố mẹ</h3><p>Soroban là gì, lộ trình học, buổi học mẫu 15 phút, bảng bạn nhỏ – bạn lớn và tiến độ của con.</p><button class="btn soft small" data-action="nav" data-to="parents">Đọc hướng dẫn</button></div>
+    </div>`;
+  const val = $('#heroVal');
+  const ab = new Abacus($('#heroAbacus'), { rods: 4, big: true, onChange: v => { val.textContent = v; } });
+  ab.setValue(0, true);
+  widgets.push(ab);
+}
+
+/* ---------- Trang cấp độ ---------- */
+function renderLevel(app) {
+  const L = levelById(state.levelId);
+  const st = levelStars(L.id);
+  const tabs = [['lesson', 'Bài học cho con'], ['guide', 'Phụ huynh đọc'], ['practice', 'Luyện tập']];
+  app.innerHTML = `
+    <button class="crumb" data-action="nav" data-to="home">← Tất cả cấp độ</button>
+    <div class="level-head">
+      <div><div class="eyebrow">Cấp ${L.id} · ${L.kyu}</div><h1>${L.name}</h1><p>${L.short}</p></div>
+      <div>${starsHtml(st)}</div>
+    </div>
+    <div class="tabs" role="tablist">${tabs.map(([k, t]) => `<button role="tab" aria-selected="${state.tab === k}" data-action="tab" data-tab="${k}">${t}</button>`).join('')}</div>
+    <div id="tabBody"></div>`;
+  const body = $('#tabBody');
+  if (state.tab === 'lesson') renderLesson(body, L);
+  else if (state.tab === 'guide') renderGuide(body, L);
+  else renderPractice(body, L);
+}
+
+function renderLesson(body, L) {
+  body.innerHTML = `<div class="lessons">${L.lesson.map((c, i) => `
+    <article class="lesson${c.demo ? '' : ' no-demo'}">
+      <div><div class="lesson-step">Bước ${i + 1} / ${L.lesson.length}</div><h3>${c.title}</h3><div class="body">${c.body.map(p => p.startsWith('<div') ? p : `<p>${p}</p>`).join('')}</div></div>
+      ${c.demo ? `<div class="demo" data-demo="${i}">
+        <div class="ab-value" data-val>${c.demo.kind === 'plan' ? c.demo.start : 0}</div>
+        <div data-ab></div>
+        ${c.demo.kind !== 'free' ? `<button class="btn small" data-action="demo-play" data-i="${i}">▶ Xem minh họa</button>` : ''}
+        <div class="demo-caption" data-cap>${c.demo.kind === 'free' ? 'Con hãy bấm vào hạt!' : ''}</div>
+        ${c.demo.kind === 'plan' ? '<ol class="steps" data-steps></ol>' : ''}
+      </div>` : ''}
+    </article>`).join('')}
+    <div class="row" style="justify-content:center"><button class="btn" data-action="tab" data-tab="practice">Con đã sẵn sàng — Luyện tập</button></div>
+  </div>`;
+  L.lesson.forEach((c, i) => {
+    if (!c.demo) return;
+    const box = body.querySelector(`[data-demo="${i}"]`);
+    const valEl = box.querySelector('[data-val]');
+    const ab = new Abacus(box.querySelector('[data-ab]'), { rods: c.demo.rods, interactive: c.demo.kind === 'free', onChange: v => { valEl.textContent = v; } });
+    if (c.demo.kind === 'plan') {
+      ab.setValue(c.demo.start, true);
+      const plan = planCalc(c.demo.start, c.demo.ops);
+      box.querySelector('[data-steps]').innerHTML = plan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('');
+      box.querySelector('[data-cap]').textContent = `${c.demo.start} ${c.demo.ops.map(o => fmtOp(o.sign, o.n)).join(' ')} = ?`;
+    }
+    widgets[i] = ab;
+  });
+}
+
+function playDemo(i) {
+  const L = levelById(state.levelId), c = L.lesson[i], ab = widgets[i];
+  const box = document.querySelector(`[data-demo="${i}"]`); if (!box || !ab) return;
+  const valEl = box.querySelector('[data-val]'), cap = box.querySelector('[data-cap]');
+  const token = ++animToken;
+  const alive = () => token === animToken;
+  if (c.demo.kind === 'seq') {
+    c.demo.values.forEach((v, k) => later(() => {
+      if (!alive()) return;
+      ab.setValue(v, true); valEl.textContent = v; Sound.click();
+      cap.textContent = v === 0 ? 'Bàn tính trống: số 0' : `${v} — ${readVi(v)}`;
+    }, k * 1300));
+  } else if (c.demo.kind === 'plan') {
+    const plan = planCalc(c.demo.start, c.demo.ops);
+    const lis = box.querySelectorAll('[data-steps] li');
+    lis.forEach(li => li.classList.remove('cur', 'done'));
+    plan.steps.forEach((s, k) => later(() => {
+      if (!alive()) return;
+      ab.setDigits(s.digits); ab.flashRod(s.rod); valEl.textContent = fromDigits(s.digits.slice(0, ab.rods));
+      if (s.kind !== 'head') Sound.click();
+      lis.forEach((li, j) => { li.classList.toggle('cur', j === k); li.classList.toggle('done', j < k); });
+      cap.innerHTML = s.text;
+      if (k === plan.steps.length - 1) later(() => { if (!alive()) return; ab.flashRod(null); cap.innerHTML = `Kết quả: <b>${plan.result}</b>`; lis.forEach(li => { li.classList.remove('cur'); li.classList.add('done'); }); }, 1600);
+    }, k * 1700));
+  }
+}
+
+function renderGuide(body, L) {
+  const g = L.guide;
+  body.innerHTML = `<div class="guide">
+    <div class="panel full"><h3>Mục tiêu của cấp này</h3><p style="color:var(--ink)">${g.goal}</p><span class="pill">Thời gian gợi ý: ${g.time}</span></div>
+    <div class="panel"><h3>Cách hướng dẫn con</h3><ol>${g.steps.map(s => `<li>${s}</li>`).join('')}</ol></div>
+    <div class="panel" style="display:grid;gap:16px;align-content:start">
+      <div><h3>Lỗi thường gặp</h3><ul>${g.mistakes.map(s => `<li>${s}</li>`).join('')}</ul></div>
+      <div><h3>Câu nói gợi ý</h3><ul class="quote-list">${g.say.map(s => `<li>${s}</li>`).join('')}</ul></div>
+    </div>
+    <div class="panel full"><h3>Cách tính điểm</h3><p>Mỗi lượt luyện tập có ${L.count} câu. Chỉ những câu con làm đúng <b>ngay lần đầu, không dùng gợi ý</b> mới được tính. Từ 90% đúng: 3 sao · từ 70%: 2 sao · từ 50%: 1 sao (mở khóa cấp sau). Con có thể chơi lại nhiều lần; trò chơi lưu số sao cao nhất.</p></div>
+  </div>`;
+}
+
+/* ---------- Luyện tập ---------- */
+function makeSession(L) {
+  const qs = []; let tries = 0;
+  while (qs.length < L.count && tries < 200) {
+    tries++;
+    const q = L.gen(qs.length); if (!q) continue;
+    const key = JSON.stringify([q.answer, q.start, q.ops, q.nums]);
+    if (qs.some(x => x.key === key)) continue;
+    q.key = key; qs.push(q);
+  }
+  return { levelId: L.id, qs, idx: 0, score: 0, attempts: 0, hinted: false, solved: false, phase: 'intro', typed: '' };
+}
+
+function renderPractice(body, L) {
+  const S = state.session && state.session.levelId === L.id ? state.session : null;
+  if (!S || S.phase === 'intro') {
+    const best = progress.levels[L.id];
+    body.innerHTML = `<div class="practice"><div class="qcard">
+      <div class="q-label">Luyện tập cấp ${L.id}</div>
+      <h2 style="font-size:1.8rem">${L.name}</h2>
+      <p style="color:var(--muted);max-width:44ch">${practiceIntro(L)}</p>
+      ${L.type === 'anzan' ? speedPicker() : ''}
+      ${best ? `<p>Kỷ lục: ${starsHtml(best.stars)} · ${best.best}/${L.count} câu đúng</p>` : ''}
+      <button class="btn" data-action="start-practice">Bắt đầu ${L.count} câu</button>
+    </div></div>`;
+    return;
+  }
+  if (S.phase === 'done') return renderResult(body, L, S);
+  const q = S.qs[S.idx];
+  const pct = (S.idx / S.qs.length) * 100;
+  body.innerHTML = `<div class="practice">
+    <div class="pbar"><div class="pbar-top"><span>Câu ${S.idx + 1} / ${S.qs.length}</span><span>Đúng: ${S.score}</span></div><div class="pbar-track"><div class="pbar-fill" style="width:${pct}%"></div></div></div>
+    <div class="qcard" id="qcard"></div>
+  </div>`;
+  const card = $('#qcard');
+  if (q.type === 'set') renderSetQ(card, L, S, q);
+  else if (q.type === 'read') renderReadQ(card, L, S, q);
+  else if (q.type === 'calc') renderCalcQ(card, L, S, q);
+  else renderAnzanQ(card, L, S, q);
+}
+function practiceIntro(L) {
+  return {
+    set: 'Máy đọc một số, con đặt số đó lên bàn tính rồi bấm "Kiểm tra". Số trên bàn tính được ẩn để con tự quan sát hạt.',
+    read: 'Bàn tính hiện một số. Con nhìn hạt và chọn đáp án đúng.',
+    calc: 'Bàn tính đã có sẵn số thứ nhất. Con gạt tiếp phép tính rồi bấm "Kiểm tra". Bí thì bấm "Gợi ý".',
+    anzan: 'Các số lần lượt hiện lên. Con tưởng tượng bàn tính trong đầu, gạt theo, rồi nhập kết quả.'
+  }[L.type];
+}
+function speedPicker() {
+  return `<div style="display:grid;gap:6px;justify-items:center"><span class="q-label">Tốc độ chiếu số</span><div class="seg" role="group">${Object.entries(SPEEDS).map(([k, s]) => `<button data-action="speed" data-speed="${k}" aria-pressed="${progress.speed === k}">${s.label}</button>`).join('')}</div></div>`;
+}
+
+function practiceButtons(extra = '') {
+  return `<div class="row" style="justify-content:center">${extra}<button class="btn" data-action="check" id="checkBtn">Kiểm tra</button></div>`;
+}
+function renderSetQ(card, L, S, q) {
+  card.innerHTML = `
+    <div class="q-label">Con hãy đặt số</div>
+    <div class="q-number">${q.answer}</div>
+    <div class="q-words">${cap(readVi(q.answer))}</div>
+    <div id="pAb"></div>
+    ${practiceButtons('<button class="btn ghost" data-action="clear">Xóa bàn tính</button>')}
+    <div class="feedback" id="fb" role="status"></div>
+    <div id="after"></div>`;
+  widgets[0] = new Abacus($('#pAb'), { rods: L.rods, big: true });
+}
+function renderReadQ(card, L, S, q) {
+  card.innerHTML = `
+    <div class="q-label">Bàn tính đang là số mấy?</div>
+    <div id="pAb"></div>
+    <div class="options">${q.options.map(o => `<button class="opt" data-action="choose" data-v="${o}">${o}</button>`).join('')}</div>
+    <div class="feedback" id="fb" role="status"></div>
+    <div id="after"></div>`;
+  widgets[0] = new Abacus($('#pAb'), { rods: L.rods, big: true, interactive: false, value: q.answer });
+}
+function exprHtml(q) {
+  if (q.ops.length === 1) return `<div class="q-expr">${q.start} ${q.ops[0].sign > 0 ? '+' : '−'} ${q.ops[0].n} = <span class="qm">?</span></div>`;
+  return `<div class="q-column"><div>${q.start}</div>${q.ops.map(o => `<div>${fmtOp(o.sign, o.n)}</div>`).join('')}<div class="rule">?</div></div>`;
+}
+function renderCalcQ(card, L, S, q) {
+  card.innerHTML = `
+    <div class="q-label">Bàn tính đã có số ${q.start}. Con gạt tiếp nhé!</div>
+    ${exprHtml(q)}
+    <div id="pAb"></div>
+    ${practiceButtons(`<button class="btn ghost" data-action="clear">Làm lại</button><button class="btn soft" data-action="hint">Gợi ý</button>`)}
+    <div class="feedback" id="fb" role="status"></div>
+    <div id="hintBox"></div>
+    <div id="after"></div>`;
+  widgets[0] = new Abacus($('#pAb'), { rods: L.rods, big: true, value: q.start });
+}
+function renderAnzanQ(card, L, S, q) {
+  card.innerHTML = `
+    <div class="q-label">Tưởng tượng bàn tính đang ở số 0</div>
+    <div class="flash-stage" id="stage"><button class="btn" data-action="anzan-go">Chiếu dãy số</button></div>
+    <div id="answerArea" hidden style="display:grid;gap:12px;justify-items:center">
+      <input class="answer-input" id="ans" inputmode="numeric" autocomplete="off" aria-label="Kết quả" maxlength="4">
+      <div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-action="key" data-k="${n}">${n}</button>`).join('')}<button data-action="key" data-k="back" aria-label="Xóa">⌫</button><button data-action="key" data-k="0">0</button><button class="ok" data-action="check">OK</button></div>
+      <button class="btn ghost small" data-action="anzan-go">Xem lại dãy số</button>
+    </div>
+    <div class="feedback" id="fb" role="status"></div>
+    <div id="after"></div>`;
+  const inp = $('#ans');
+  inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, ''); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); } });
+}
+function playFlash() {
+  const L = levelById(state.levelId), S = state.session, q = S.qs[S.idx];
+  const stage = $('#stage'); if (!stage) return;
+  $('#answerArea').hidden = true;
+  const token = ++animToken, alive = () => token === animToken;
+  const ms = Math.round(L.flashBase * SPEEDS[progress.speed].k);
+  const seq = [['3', 'plain'], ['2', 'plain'], ['1', 'plain']].map(x => ({ t: x[0], c: '' , cd: true }))
+    .concat(q.nums.map((o, i) => ({ t: i === 0 ? String(o.n) : fmtOp(o.sign, o.n), c: o.sign > 0 ? 'plus' : 'minus' })));
+  let at = 0;
+  seq.forEach(item => {
+    later(() => { if (!alive()) return; stage.innerHTML = `<div class="flash-num pop ${item.c}" style="${item.cd ? 'color:var(--muted);font-size:3rem' : ''}">${item.t}</div>`; if (!item.cd) Sound.click(); }, at);
+    at += item.cd ? 600 : ms;
+    if (!item.cd) later(() => { if (!alive()) return; stage.innerHTML = ''; }, at - 180);
+  });
+  later(() => {
+    if (!alive()) return;
+    stage.innerHTML = `<div style="color:var(--muted);font-weight:600">Kết quả là bao nhiêu?</div>`;
+    $('#answerArea').hidden = false;
+    const inp = $('#ans'); inp.focus({ preventScroll: true });
+  }, at + 100);
+}
+
+function feedback(cls, html) { const fb = $('#fb'); if (fb) { fb.className = 'feedback ' + cls; fb.innerHTML = html; } }
+function showNext(S) {
+  const last = S.idx === S.qs.length - 1;
+  $('#after').innerHTML = `<button class="btn good" data-action="next" id="nextBtn">${last ? 'Xem kết quả' : 'Câu tiếp theo →'}</button>`;
+  $('#nextBtn').focus({ preventScroll: true });
+  const cb = $('#checkBtn'); if (cb) cb.disabled = true;
+}
+const PRAISE = ['Chính xác!', 'Giỏi quá!', 'Tuyệt vời!', 'Đúng rồi!', 'Xuất sắc!'];
+
+function checkAnswer() {
+  const S = state.session; if (!S || S.solved) return;
+  const q = S.qs[S.idx];
+  let val;
+  if (q.type === 'anzan') {
+    const inp = $('#ans'); if (!inp || inp.value === '') { feedback('info', 'Con nhập kết quả trước nhé.'); return; }
+    val = +inp.value;
+  } else val = widgets[0].getValue();
+  S.attempts++;
+  if (val === q.answer) {
+    S.solved = true;
+    if (S.attempts === 1 && !S.hinted) S.score++;
+    Sound.good();
+    feedback('ok', `${pick(PRAISE)} Kết quả là ${q.answer}.${S.attempts > 1 || S.hinted ? ' (Câu này không tính điểm vì đã thử lại hoặc dùng gợi ý.)' : ''}`);
+    if (widgets[0]) widgets[0].setInteractive(false);
+    showNext(S);
+    return;
+  }
+  Sound.bad();
+  if (q.type === 'anzan') {
+    S.solved = true;
+    feedback('no', `Chưa đúng. Đáp án là <b>${q.answer}</b>: ${q.nums.map((o, i) => i === 0 ? o.n : fmtOp(o.sign, o.n)).join(' ')} = ${q.answer}`);
+    showNext(S);
+    return;
+  }
+  if (S.attempts >= 3) {
+    S.solved = true;
+    feedback('no', `Chưa đúng. Đáp án là <b>${q.answer}</b>. Bàn tính đang là ${val}.`);
+    if (q.type === 'calc') showHint(true);
+    widgets[0].setValue(q.answer, true); widgets[0].setInteractive(false);
+    showNext(S);
+    return;
+  }
+  const msg = q.type === 'set' ? `Chưa đúng — bàn tính của con đang là <b>${val}</b>. Con thử lại nhé!` : `Chưa đúng — bàn tính của con đang là <b>${val}</b>. Bấm "Làm lại" hoặc "Gợi ý" nhé!`;
+  feedback('no', msg);
+}
+function showHint(silent) {
+  const S = state.session, q = S.qs[S.idx];
+  if (!silent) S.hinted = true;
+  const box = $('#hintBox'); if (!box) return;
+  box.innerHTML = `<div class="hint-box"><h4>Các bước gạt hạt</h4><ol class="steps">${q.plan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('')}</ol></div>`;
+}
+
+function chooseOption(btn) {
+  const S = state.session; if (!S || S.solved) return;
+  const q = S.qs[S.idx], v = +btn.dataset.v;
+  S.attempts++;
+  if (v === q.answer) {
+    btn.classList.add('right'); S.solved = true;
+    if (S.attempts === 1) S.score++;
+    Sound.good();
+    feedback('ok', `${pick(PRAISE)} Đây là số ${q.answer} — ${readVi(q.answer)}.`);
+    showNext(S);
+  } else {
+    btn.classList.add('wrong'); btn.disabled = true; Sound.bad();
+    feedback('no', 'Chưa đúng. Con đếm lại hạt ở từng cột nhé!');
+  }
+}
+
+function nextQuestion() {
+  const S = state.session; if (!S) return;
+  clearTimers();
+  if (S.idx >= S.qs.length - 1) {
+    S.phase = 'done';
+    const L = levelById(S.levelId);
+    const pct = S.score / S.qs.length;
+    S.stars = pct >= .9 ? 3 : pct >= .7 ? 2 : pct >= .5 ? 1 : 0;
+    const prev = progress.levels[L.id] || { stars: 0, best: 0, plays: 0 };
+    const wasLocked = !isUnlocked(L.id + 1);
+    progress.levels[L.id] = { stars: Math.max(prev.stars, S.stars), best: Math.max(prev.best, S.score), plays: (prev.plays || 0) + 1, last: new Date().toISOString().slice(0, 10) };
+    S.unlockedNew = wasLocked && L.id < LEVELS.length && isUnlocked(L.id + 1);
+    saveProgress();
+    if (S.stars > 0) Sound.win();
+  } else {
+    Object.assign(S, { idx: S.idx + 1, attempts: 0, hinted: false, solved: false });
+  }
+  render();
+}
+
+function renderResult(body, L, S) {
+  const msgs = ['Cố lên, mình luyện thêm nhé!', 'Khá lắm! Con đã mở được cấp mới.', 'Rất tốt! Thêm chút nữa là 3 sao.', 'Hoàn hảo! Con là cao thủ Soroban!'];
+  const hasNext = L.id < LEVELS.length && isUnlocked(L.id + 1);
+  body.innerHTML = `<div class="practice"><div class="qcard result">
+    <div class="big-stars" aria-label="${S.stars} sao">${[0, 1, 2].map(i => `<span class="${i < S.stars ? 'on' : ''}">★</span>`).join('')}</div>
+    <h2>${msgs[S.stars]}</h2>
+    <div class="score">${S.score} / ${S.qs.length} câu đúng ngay lần đầu</div>
+    ${S.unlockedNew ? `<span class="pill">Đã mở khóa cấp ${L.id + 1}: ${levelById(L.id + 1).name}</span>` : ''}
+    ${S.stars === 0 ? '<p style="color:var(--muted)">Cần đúng ít nhất một nửa số câu để mở cấp tiếp theo. Bố mẹ có thể cùng con xem lại phần Bài học.</p>' : ''}
+    <div class="row" style="justify-content:center">
+      <button class="btn ghost" data-action="start-practice">Chơi lại</button>
+      ${hasNext ? `<button class="btn" data-action="open-level" data-id="${L.id + 1}">Sang cấp ${L.id + 1} →</button>` : `<button class="btn" data-action="nav" data-to="home">Về trang cấp độ</button>`}
+    </div>
+  </div></div>`;
+}
+
+/* ---------- Bàn tính tự do ---------- */
+function renderFree(app) {
+  const F = state.free;
+  app.innerHTML = `
+    <div class="level-head"><div><div class="eyebrow">Bàn tính tự do</div><h1>Gạt thử và xem cách tính</h1><p>Dùng để bố mẹ làm mẫu, hoặc để con tự khám phá. Có thể dùng phím mũi tên lên/xuống trên từng cột.</p></div></div>
+    <div class="free">
+      <div class="free-board">
+        <div class="ab-value${F.show ? '' : ' hidden-val'}" id="freeVal">${F.show ? 0 : 'Số đang ẩn'}</div>
+        <div id="freeAb"></div>
+        <div class="row" style="justify-content:center">
+          <button class="btn ghost small" data-action="free-clear">Xóa về 0</button>
+          <button class="btn ghost small" data-action="free-toggle">${F.show ? 'Ẩn số' : 'Hiện số'}</button>
+          <div class="seg" role="group" aria-label="Số cột">${[3, 5, 7].map(n => `<button data-action="free-rods" data-n="${n}" aria-pressed="${F.rods === n}">${n} cột</button>`).join('')}</div>
+        </div>
+        <div class="demo-caption" id="freeCap"></div>
+      </div>
+      <div class="panel">
+        <h3>Xem cách gạt một phép tính</h3>
+        <p>Nhập phép tính, bàn tính sẽ tự gạt từng bước và giải thích khi nào dùng bạn nhỏ, bạn lớn.</p>
+        <form class="calc-form" id="calcForm">
+          <label class="field">Số thứ nhất<input id="fa" type="number" min="0" max="9999" value="46"></label>
+          <label class="field">Phép<select id="fop"><option value="1">+</option><option value="-1">−</option></select></label>
+          <label class="field">Số thứ hai<input id="fb2" type="number" min="0" max="9999" value="38"></label>
+        </form>
+        <div class="row" style="margin-top:12px"><button class="btn small" data-action="free-demo">▶ Minh họa</button></div>
+        <p id="freeErr" style="color:var(--bad);margin-top:8px" role="status"></p>
+        <ol class="steps" id="freeSteps"></ol>
+      </div>
+    </div>`;
+  const valEl = $('#freeVal');
+  const ab = new Abacus($('#freeAb'), { rods: F.rods, big: F.rods <= 5, labels: F.rods <= 5, onChange: v => { if (F.show) valEl.textContent = v; } });
+  widgets[0] = ab;
+  $('#calcForm').addEventListener('submit', e => { e.preventDefault(); freeDemo(); });
+}
+function freeDemo() {
+  const F = state.free, ab = widgets[0];
+  const a = Math.floor(+$('#fa').value), b = Math.floor(+$('#fb2').value), sign = +$('#fop').value;
+  const err = $('#freeErr'); err.textContent = '';
+  const max = Math.pow(10, F.rods) - 1;
+  if (!(a >= 0) || !(b >= 0)) { err.textContent = 'Hãy nhập hai số không âm.'; return; }
+  if (sign < 0 && b > a) { err.textContent = 'Số trừ lớn hơn số bị trừ — hãy đổi lại để kết quả không âm.'; return; }
+  if (a > max || b > max || a + b > max) { err.textContent = `Bàn tính ${F.rods} cột chỉ chứa được tới ${max}. Chọn thêm cột hoặc số nhỏ hơn.`; return; }
+  const plan = planCalc(a, [{ sign, n: b }], F.rods);
+  const list = $('#freeSteps'), cap = $('#freeCap'), valEl = $('#freeVal');
+  list.innerHTML = plan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('');
+  const lis = list.querySelectorAll('li');
+  clearTimers();
+  const token = ++animToken, alive = () => token === animToken;
+  ab.setInteractive(false);
+  plan.steps.forEach((s, k) => later(() => {
+    if (!alive()) return;
+    ab.setDigits(s.digits); ab.flashRod(s.rod);
+    if (F.show) valEl.textContent = fromDigits(s.digits.slice(0, ab.rods));
+    if (s.kind !== 'head') Sound.click();
+    lis.forEach((li, j) => { li.classList.toggle('cur', j === k); li.classList.toggle('done', j < k); });
+    cap.innerHTML = s.text;
+    if (k === plan.steps.length - 1) later(() => { if (!alive()) return; ab.flashRod(null); ab.setInteractive(true); cap.innerHTML = `${a} ${sign > 0 ? '+' : '−'} ${b} = <b>${plan.result}</b>`; }, 1500);
+  }, k * 1600));
+}
+
+/* ---------- Trang phụ huynh ---------- */
+function renderParents(app) {
+  const rows = LEVELS.map(l => {
+    const p = progress.levels[l.id];
+    return `<tr><td class="num">${l.id}</td><td>${l.name}<br><span style="color:var(--muted);font-size:.82rem">${l.guide.time}</span></td><td>${isUnlocked(l.id) ? starsHtml(levelStars(l.id)) : '<span style="color:var(--muted)">Chưa mở</span>'}</td><td class="num">${p ? `${p.best}/${l.count}` : '—'}</td><td class="num">${p ? p.plays : 0}</td><td class="num">${p && p.last ? p.last : '—'}</td></tr>`;
+  }).join('');
+  app.innerHTML = `
+    <div class="level-head"><div><div class="eyebrow">Dành cho bố mẹ</div><h1>Hướng dẫn con học Soroban</h1><p>Đọc một lần trước khi bắt đầu. Mỗi cấp độ còn có thẻ "Phụ huynh đọc" riêng.</p></div></div>
+    <div class="article">
+      <div class="panel">
+        <h2>Soroban là gì?</h2>
+        <p><b>Soroban</b> (そろばん) là bàn tính của Nhật Bản. Mỗi cột có <b>1 hạt trên</b> (giá trị 5) và <b>4 hạt dưới</b> (mỗi hạt giá trị 1), ngăn cách bởi xà ngang. Mỗi cột biểu diễn một chữ số từ 0 đến 9, nên bàn tính có bao nhiêu cột thì biểu diễn được số có bấy nhiêu chữ số.</p>
+        <p>Trẻ học Soroban trước hết luyện tay trên bàn tính thật, sau đó dần dần "chụp" hình ảnh bàn tính vào đầu để tính nhẩm — gọi là <b>Anzan</b> (暗算). Ở Nhật, trình độ được chia theo <b>kyū</b> (級): số càng nhỏ càng giỏi. Các cấp trong trò chơi được đặt tên theo tinh thần đó, từ 10 kyū đến 2 kyū.</p>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h2>Lợi ích cho con</h2><ul>
+          <li>Hiểu sâu giá trị hàng (đơn vị, chục, trăm) nhờ nhìn và chạm.</li>
+          <li>Tăng khả năng tập trung và trí nhớ hình ảnh.</li>
+          <li>Tính nhẩm nhanh, chính xác khi đã thành thạo Anzan.</li>
+          <li>Phối hợp tay – mắt – não qua động tác ngón cái, ngón trỏ.</li>
+        </ul></div>
+        <div class="panel"><h2>Nên bắt đầu khi nào?</h2>
+          <p>Phù hợp từ khoảng <b>5–10 tuổi</b>, khi con đã đếm được đến 10 và nhận biết chữ số. Trẻ lớn hơn vẫn học tốt, chỉ đi nhanh hơn qua các cấp đầu.</p>
+          <p>Nếu có thể, hãy mua một bàn tính Soroban thật (13 hoặc 17 cột) để con luyện ngón tay song song với trò chơi.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Cách dùng trò chơi</h2>
+        <ol>
+          <li><b>Chọn cấp độ</b> ở trang chủ. Cấp sau mở khi cấp trước đạt ít nhất 1 sao.</li>
+          <li><b>Phụ huynh đọc</b> trước: mỗi cấp có mục tiêu, cách hướng dẫn, lỗi thường gặp và câu nói gợi ý.</li>
+          <li><b>Bài học cho con</b>: ngồi cùng con, bấm "Xem minh họa" để bàn tính tự gạt từng bước. Đọc to phần giải thích.</li>
+          <li><b>Luyện tập</b>: con tự làm, bố mẹ quan sát. Đúng ngay lần đầu mới được tính điểm; tối đa 3 sao mỗi cấp.</li>
+          <li><b>Bàn tính tự do</b>: bố mẹ nhập bất kỳ phép tính nào để xem cách gạt, hữu ích khi con hỏi bài tập ở trường.</li>
+        </ol>
+      </div>
+      <div class="panel">
+        <h2>Lộ trình và tiến độ của con</h2>
+        <div class="table-scroll"><table class="data-table">
+          <thead><tr><th>Cấp</th><th>Nội dung · thời gian gợi ý</th><th>Sao</th><th>Tốt nhất</th><th>Lượt</th><th>Lần cuối</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h2>Buổi học mẫu 15 phút</h2><ol>
+          <li><b>2 phút</b> — Khởi động: đối đáp bạn nhỏ / bạn lớn, hoặc đặt vài số.</li>
+          <li><b>5 phút</b> — Xem bài học mới cùng con (thẻ "Bài học cho con").</li>
+          <li><b>6 phút</b> — Con tự làm một lượt Luyện tập.</li>
+          <li><b>2 phút</b> — Khen cụ thể điều con làm tốt, hẹn buổi sau.</li>
+        </ol><p style="margin-top:10px">Học <b>mỗi ngày một chút</b> hiệu quả hơn học dồn cuối tuần.</p></div>
+        <div class="panel"><h2>Kỹ thuật ngón tay</h2><ul>
+          <li><b>Ngón cái</b>: chỉ dùng để đẩy hạt dưới <b>lên</b>.</li>
+          <li><b>Ngón trỏ</b>: kéo hạt dưới <b>xuống</b>, và gạt hạt trên cả lên lẫn xuống.</li>
+          <li>Ngồi thẳng, bàn tính đặt ngang trước mặt, tay trái giữ cạnh trái bàn tính.</li>
+          <li>Luôn tính từ <b>cột trái sang cột phải</b>.</li>
+        </ul></div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h2>Bảng bạn nhỏ (hợp 5)</h2><p>Dùng khi cột thiếu hạt dưới. Cộng n = cộng 5, trừ bạn nhỏ. Trừ n = cộng bạn nhỏ, trừ 5.</p>${FIVE_TABLE}</div>
+        <div class="panel"><h2>Bảng bạn lớn (hợp 10)</h2><p>Dùng khi phải nhớ hoặc mượn. Cộng n = trừ bạn lớn, nhớ 1 sang trái. Trừ n = mượn 1 bên trái, cộng bạn lớn.</p>${TEN_TABLE}</div>
+      </div>
+      <div class="panel"><h2>Giữ cho con luôn hứng thú</h2><ul>
+        <li>Khen <b>nỗ lực và sự cẩn thận</b> hơn là tốc độ: "Con gạt rất chắc tay!"</li>
+        <li>Dừng buổi học khi con còn vui — đừng đợi đến lúc con mệt.</li>
+        <li>Không so sánh con với bạn khác; so sánh với chính con hôm qua (xem bảng tiến độ ở trên).</li>
+        <li>Khi con sai, hỏi "Con thử kể lại mình đã gạt thế nào?" thay vì chỉ ra lỗi ngay.</li>
+        <li>Chơi lại cấp cũ để lấy 3 sao cũng là một cách ôn tập rất tốt.</li>
+      </ul></div>
+      <div class="panel">
+        <h2>Cài đặt</h2>
+        <div class="switch-row"><span>Âm thanh khi gạt hạt và trả lời</span><button class="btn ghost small" data-action="toggle-sound">${progress.sound ? 'Đang bật — Tắt' : 'Đang tắt — Bật'}</button></div>
+        <div class="switch-row"><span>Mở khóa tất cả cấp độ (khi con đã học Soroban ở nơi khác)</span><button class="btn ghost small" data-action="unlock-all">${progress.unlockAll ? 'Đang mở — Khóa lại' : 'Mở khóa'}</button></div>
+        <div class="switch-row" style="display:grid">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span>Xóa toàn bộ tiến độ và số sao</span><button class="btn ghost small" data-action="reset-ask">Xóa tiến độ</button></div>
+          ${state.confirmReset ? `<div class="confirm"><span>Toàn bộ sao và kỷ lục sẽ bị xóa, không thể khôi phục. Bố mẹ chắc chắn chứ?</span><div class="row"><button class="btn small" style="background:var(--bad);color:var(--surface)" data-action="reset-confirm">Xóa hết</button><button class="btn ghost small" data-action="reset-cancel">Giữ lại</button></div></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+   Xử lý sự kiện
+   ========================================================= */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-action]'); if (!t) return;
+  Sound.ensure();
+  const a = t.dataset.action;
+  switch (a) {
+    case 'nav': go(t.dataset.to, { confirmReset: false }); break;
+    case 'open-level': {
+      const id = +t.dataset.id; if (!isUnlocked(id)) return;
+      go('level', { levelId: id, tab: 'lesson', session: null }); break;
+    }
+    case 'tab': clearTimers(); state.tab = t.dataset.tab; if (state.tab === 'practice' && state.session && state.session.levelId !== state.levelId) state.session = null; render(); break;
+    case 'demo-play': playDemo(+t.dataset.i); break;
+    case 'start-practice': { clearTimers(); const L = levelById(state.levelId); state.session = makeSession(L); state.session.phase = 'q'; state.tab = 'practice'; render(); break; }
+    case 'speed': progress.speed = t.dataset.speed; saveProgress(); render(); break;
+    case 'check': checkAnswer(); break;
+    case 'clear': {
+      const S = state.session, q = S && S.qs[S.idx]; if (!q || S.solved) return;
+      widgets[0].setValue(q.type === 'calc' ? q.start : 0, true); feedback('', ''); break;
+    }
+    case 'hint': showHint(false); feedback('info', 'Làm theo từng dòng nhé. Câu này sẽ không được tính điểm.'); break;
+    case 'choose': chooseOption(t); break;
+    case 'next': nextQuestion(); break;
+    case 'anzan-go': playFlash(); break;
+    case 'key': {
+      const inp = $('#ans'); if (!inp) return;
+      if (t.dataset.k === 'back') inp.value = inp.value.slice(0, -1);
+      else if (inp.value.length < 4) inp.value += t.dataset.k;
+      break;
+    }
+    case 'free-clear': clearTimers(); widgets[0].setInteractive(true); widgets[0].flashRod(null); widgets[0].setValue(0); $('#freeCap').textContent = ''; break;
+    case 'free-toggle': {
+      state.free.show = !state.free.show;
+      const v = $('#freeVal'); v.classList.toggle('hidden-val', !state.free.show);
+      v.textContent = state.free.show ? widgets[0].getValue() : 'Số đang ẩn';
+      t.textContent = state.free.show ? 'Ẩn số' : 'Hiện số'; break;
+    }
+    case 'free-rods': clearTimers(); state.free.rods = +t.dataset.n; render(); break;
+    case 'free-demo': freeDemo(); break;
+    case 'toggle-sound': progress.sound = !progress.sound; saveProgress(); render(); break;
+    case 'unlock-all': progress.unlockAll = !progress.unlockAll; saveProgress(); render(); break;
+    case 'reset-ask': state.confirmReset = true; render(); break;
+    case 'reset-cancel': state.confirmReset = false; render(); break;
+    case 'reset-confirm': progress = Object.assign(loadProgress(), { levels: {}, unlockAll: false }); saveProgress(); state.confirmReset = false; state.session = null; render(); break;
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+    const nb = $('#nextBtn'); if (nb) { e.preventDefault(); nb.click(); }
+  }
+});
+
+render();
+</script>
+</body>
+</html>
