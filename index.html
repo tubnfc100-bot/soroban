@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bàn Tính Soroban</title>
+<meta name="description" content="Học bàn tính Soroban Nhật Bản qua 10 cấp độ, có hướng dẫn cho phụ huynh và luyện tính nhẩm.">
+<meta name="theme-color" content="#4E321D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Soroban">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
@@ -368,6 +378,15 @@ main { padding-block: 24px 64px; }
 .flash-cover { position: absolute; inset: 0; display: grid; place-items: center; background: var(--surface-2); border: 2px dashed var(--line); border-radius: 12px; font-family: var(--font-display); font-size: 3rem; font-weight: 800; color: var(--muted); }
 .center-col { display: grid; justify-items: center; gap: 12px; text-align: center; }
 
+/* ---------- Cài đặt ứng dụng ---------- */
+#install { scroll-margin-top: 120px; }
+.install-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 6px; }
+.install-steps h3 { font-size: 1.05rem; margin-bottom: 6px; }
+.install-steps ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: .94rem; }
+.status-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--surface-2); border-radius: var(--r-sm); padding: 10px 12px; margin-bottom: 12px; font-weight: 600; }
+.status-line.ok { background: var(--good-soft); color: var(--good); }
+.key { display: inline-block; border: 1.5px solid var(--line); border-radius: 6px; padding: 0 6px; font-weight: 700; font-size: .88em; background: var(--surface); }
+
 .footer { color: var(--muted); font-size: .82rem; text-align: center; padding-block: 24px; }
 
 @media (max-width: 760px) {
@@ -399,6 +418,7 @@ main { padding-block: 24px 64px; }
       <button data-action="nav" data-to="parents">Phụ huynh</button>
     </nav>
     <span class="star-total" id="starTotal" title="Tổng số sao">★ 0</span>
+    <button class="btn small" id="installBtn" data-action="install" hidden>Cài ứng dụng</button>
   </div>
 </header>
 <main class="wrap" id="app"></main>
@@ -1036,6 +1056,40 @@ const LEVELS = [
 const SPEEDS = { slow: { label: 'Chậm', k: 1.35 }, mid: { label: 'Vừa', k: 1 }, fast: { label: 'Nhanh', k: .65 } };
 
 /* =========================================================
+   Ứng dụng cài được (PWA): chơi khi không có mạng, cài lên màn hình chính
+   ========================================================= */
+const PWA = {
+  prompt: null,
+  standalone: (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true,
+  ios: /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+  canUseSW: 'serviceWorker' in navigator && /^https?:$/.test(location.protocol) && window.self === window.top
+};
+if (PWA.canUseSW) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); PWA.prompt = e; updateInstallUI(true); });
+window.addEventListener('appinstalled', () => { PWA.prompt = null; PWA.installed = true; updateInstallUI(true); });
+function updateInstallUI(rerender) {
+  const b = document.getElementById('installBtn');
+  if (b) b.hidden = !PWA.prompt || PWA.standalone;
+  if (rerender && (state.view === 'parents' || state.view === 'home')) render();
+}
+function runInstall() {
+  if (!PWA.prompt) { go('parents'); later(() => { const el = $('#install'); if (el) el.scrollIntoView({ block: 'start' }); }, 30); return; }
+  PWA.prompt.prompt();
+  PWA.prompt.userChoice.finally(() => { PWA.prompt = null; updateInstallUI(true); });
+}
+function installStatusHtml() {
+  if (PWA.standalone) return `<div class="status-line ok">Trò chơi đang chạy như một ứng dụng đã cài. Con có thể chơi cả khi không có mạng.</div>`;
+  if (PWA.installed) return `<div class="status-line ok">Đã cài xong. Hãy mở trò chơi từ biểu tượng Soroban trên màn hình chính.</div>`;
+  if (PWA.prompt) return `<div class="status-line"><span>Thiết bị này cài được ngay.</span><button class="btn small" data-action="install">Cài ứng dụng</button></div>`;
+  if (PWA.ios) return `<div class="status-line">Trên iPhone, iPad: làm theo hướng dẫn "iPhone, iPad" bên dưới, dùng trình duyệt Safari.</div>`;
+  if (!PWA.canUseSW) return `<div class="status-line">Trang này đang mở ở chế độ xem trước nên chưa cài được. Hãy mở trò chơi từ địa chỉ web (https) của nó rồi cài.</div>`;
+  return `<div class="status-line">Nếu chưa thấy nút "Cài ứng dụng", hãy dùng menu của trình duyệt như hướng dẫn bên dưới.</div>`;
+}
+
+/* =========================================================
    Trạng thái & điều hướng
    ========================================================= */
 const state = { view: 'home', levelId: 1, tab: 'lesson', session: null, confirmReset: false, free: { rods: 5, show: true, tool: 'abacus' }, mental: { digits: 1, streak: 0, answer: null } };
@@ -1067,6 +1121,7 @@ function render() {
     if (cur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
   $('#starTotal').textContent = `★ ${totalStars()}/${LEVELS.length * 3}`;
+  updateInstallUI(false);
   if (state.view === 'home') renderHome(app);
   else if (state.view === 'level') renderLevel(app);
   else if (state.view === 'free') renderFree(app);
@@ -1108,6 +1163,7 @@ function renderHome(app) {
     <div class="home-extra">
       <div class="panel"><h3>Bàn tính tự do</h3><p>Gạt thoải mái hoặc nhập một phép tính để xem máy hướng dẫn từng bước gạt hạt.</p><button class="btn soft small" data-action="nav" data-to="free">Mở bàn tính</button></div>
       <div class="panel"><h3>Dành cho bố mẹ</h3><p>Soroban là gì, lộ trình học, buổi học mẫu 15 phút, bảng bạn nhỏ – bạn lớn và tiến độ của con.</p><button class="btn soft small" data-action="nav" data-to="parents">Đọc hướng dẫn</button></div>
+      ${PWA.standalone ? '' : `<div class="panel"><h3>Cài lên điện thoại</h3><p>Thêm Soroban vào màn hình chính để mở như một ứng dụng, chơi cả khi không có mạng.</p><button class="btn soft small" data-action="install">${PWA.prompt ? 'Cài ứng dụng' : 'Xem cách cài'}</button></div>`}
     </div>`;
   const val = $('#heroVal');
   const ab = new Abacus($('#heroAbacus'), { rods: 4, big: true, onChange: v => { val.textContent = v; } });
@@ -1681,6 +1737,7 @@ function renderParents(app) {
           <li><b>Luyện tập</b>: con tự làm, bố mẹ quan sát. Đúng ngay lần đầu mới được tính điểm; tối đa 3 sao mỗi cấp.</li>
           <li><b>Bàn tính tự do</b>: bố mẹ nhập bất kỳ phép tính nào để xem cách gạt (trên bàn tính hoặc trên hai bàn tay), hữu ích khi con hỏi bài tập ở trường.</li>
           <li><b>Chế độ 2 tay</b>: bật ở đầu trang mỗi cấp hoặc trong Cài đặt bên dưới. Bàn tính tô màu cột theo tay, gợi ý ghi rõ tay nào, ngón nào.</li>
+          <li><b>Cài lên điện thoại</b>: xem mục "Cài trò chơi lên điện thoại" bên dưới để mở trò chơi như một ứng dụng, chơi cả khi không có mạng.</li>
           <li><b>Tính nhẩm</b>: trang riêng hướng dẫn 4 giai đoạn từ bàn tính thật đến Anzan, kèm bài tập "Chụp ảnh bàn tính".</li>
         </ol>
       </div>
@@ -1731,6 +1788,27 @@ function renderParents(app) {
         <li>Khi con sai, hỏi "Con thử kể lại mình đã gạt thế nào?" thay vì chỉ ra lỗi ngay.</li>
         <li>Chơi lại cấp cũ để lấy 3 sao cũng là một cách ôn tập rất tốt.</li>
       </ul></div>
+      <div class="panel" id="install">
+        <h2>Cài trò chơi lên điện thoại, máy tính bảng</h2>
+        ${installStatusHtml()}
+        <div class="install-steps">
+          <div><h3>Android (Chrome)</h3><ol>
+            <li>Mở trò chơi bằng Chrome.</li>
+            <li>Bấm nút <span class="key">Cài ứng dụng</span> ở thanh trên cùng, hoặc mở menu <span class="key">⋮</span> rồi chọn <b>Cài đặt ứng dụng</b> / <b>Thêm vào màn hình chính</b>.</li>
+            <li>Bấm <b>Cài đặt</b> để xác nhận.</li>
+          </ol></div>
+          <div><h3>iPhone, iPad (Safari)</h3><ol>
+            <li>Mở trò chơi bằng Safari.</li>
+            <li>Bấm nút <b>Chia sẻ</b> <span class="key">⬆</span> ở thanh dưới (hoặc trên cùng với iPad).</li>
+            <li>Kéo xuống, chọn <b>Thêm vào MH chính</b>, rồi bấm <b>Thêm</b>.</li>
+          </ol></div>
+          <div><h3>Máy tính (Chrome, Edge)</h3><ol>
+            <li>Bấm biểu tượng cài đặt ở cuối thanh địa chỉ, hoặc nút <span class="key">Cài ứng dụng</span> trên trang.</li>
+            <li>Trò chơi mở trong cửa sổ riêng như phần mềm.</li>
+          </ol></div>
+        </div>
+        <p style="margin-top:12px;color:var(--muted)">Sau khi cài, biểu tượng Soroban xuất hiện trên màn hình chính. Lần đầu mở cần có mạng; sau đó con chơi được cả khi không có mạng. Tiến độ và số sao được lưu ngay trên thiết bị.</p>
+      </div>
       <div class="panel">
         <h2>Cài đặt</h2>
         <div class="switch-row"><span>Chế độ 2 tay: tô màu cột theo tay, gợi ý ghi rõ tay và ngón</span>${handsToggle()}</div>
@@ -1785,6 +1863,7 @@ document.addEventListener('click', e => {
     }
     case 'free-rods': clearTimers(); state.free.rods = +t.dataset.n; render(); break;
     case 'free-demo': freeDemo(); break;
+    case 'install': runInstall(); break;
     case 'free-tool': clearTimers(); state.free.tool = t.dataset.tool; render(); break;
     case 'toggle-hands': {
       clearTimers();

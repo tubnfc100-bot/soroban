@@ -1,0 +1,20 @@
+{
+  "name": "Bàn Tính Soroban",
+  "short_name": "Soroban",
+  "description": "Học bàn tính Soroban Nhật Bản qua 10 cấp độ, có hướng dẫn cho phụ huynh và luyện tính nhẩm.",
+  "lang": "vi",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#EBEFF3",
+  "theme_color": "#4E321D",
+  "categories": ["education", "kids", "games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

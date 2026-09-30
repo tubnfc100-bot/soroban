@@ -7,6 +7,26 @@ Trò chơi học toán bằng bàn tính **Soroban** (phương pháp Nhật Bả
 Mở file `index.html` bằng trình duyệt (Chrome, Edge, Safari, Firefox), trên máy tính hoặc máy tính bảng. Không cần cài đặt gì thêm.
 Tiến độ (số sao) được lưu ngay trên trình duyệt đó.
 
+## Cài lên điện thoại (PWA)
+
+Trò chơi là một Progressive Web App: cài được lên màn hình chính và chơi được khi không có mạng.
+Để cài, trò chơi cần được mở từ một địa chỉ **https** (mở file trực tiếp trên máy thì không cài được).
+
+**Đưa lên mạng miễn phí bằng GitHub Pages**
+
+1. Vào repo trên GitHub → **Settings** → **Pages**.
+2. Ở *Build and deployment*, chọn **Source: Deploy from a branch**, chọn nhánh chứa trò chơi và thư mục **/ (root)**, bấm **Save**.
+3. Sau 1–2 phút, trò chơi có ở địa chỉ dạng `https://<tên-tài-khoản>.github.io/soroban/`.
+
+**Cài trên thiết bị**
+
+- **Android (Chrome):** mở địa chỉ trên → bấm nút *Cài ứng dụng* trên trang, hoặc menu ⋮ → *Cài đặt ứng dụng* / *Thêm vào màn hình chính*.
+- **iPhone, iPad (Safari):** mở địa chỉ trên → nút *Chia sẻ* → *Thêm vào MH chính*.
+- **Máy tính (Chrome, Edge):** bấm biểu tượng cài đặt ở cuối thanh địa chỉ.
+
+Các file liên quan: `manifest.webmanifest` (tên, màu, biểu tượng), `sw.js` (lưu sẵn để chơi ngoại tuyến), thư mục `icons/`.
+Khi sửa trò chơi, hãy tăng `VERSION` trong `sw.js` để điện thoại tải bản mới.
+
 ## Nội dung
 
 | Cấp | Kyū | Nội dung | Dạng luyện tập |
