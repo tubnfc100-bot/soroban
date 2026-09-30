@@ -36,6 +36,16 @@
   --bead: #D49B4E;
   --bead-lo: #8A5620;
   --dot: #F4E6C8;
+  /* Bàn tay — cố định ở mọi chế độ */
+  --skin: #F3CDA6;
+  --skin-lo: #D9AB84;
+  --skin-line: #A8744C;
+  --nail: #FCE9DA;
+  /* Màu nhận diện hai tay: trái = chàm, phải = hổ phách */
+  --hand-l: #3D5FB8;
+  --hand-l-soft: #DFE6F7;
+  --hand-r: #A8620F;
+  --hand-r-soft: #FBEBD2;
 
   --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
   --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -50,6 +60,7 @@
     --ai: #93A9EC; --on-ai: #0F1528; --ai-soft: #25304B; --good: #62C796; --good-soft: #163527; --bad: #EE8A78;
     --bad-soft: #3B201B; --gold: #F0B948; --gold-soft: #3A2E14;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+    --hand-l: #9DB3F0; --hand-l-soft: #26325A; --hand-r: #F2B25C; --hand-r-soft: #3D2C12;
     color-scheme: dark;
   }
 }
@@ -58,10 +69,12 @@
   --ai: #93A9EC; --on-ai: #0F1528; --ai-soft: #25304B; --good: #62C796; --good-soft: #163527; --bad: #EE8A78;
   --bad-soft: #3B201B; --gold: #F0B948; --gold-soft: #3A2E14;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.25);
+  --hand-l: #9DB3F0; --hand-l-soft: #26325A; --hand-r: #F2B25C; --hand-r-soft: #3D2C12;
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
@@ -305,6 +318,56 @@ main { padding-block: 24px 64px; }
 .field input, .field select { font: inherit; font-size: 1.1rem; font-weight: 700; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-sm); padding: 6px 10px; width: 100%; }
 .calc-form { display: grid; grid-template-columns: 1fr 70px 1fr; gap: 8px; align-items: end; }
 
+/* ---------- Chế độ 2 tay ---------- */
+.hand-tag { display: inline-block; font-size: .78em; font-weight: 700; padding: 0 7px; border-radius: 999px; line-height: 1.55; white-space: nowrap; }
+.hand-tag.L { background: var(--hand-l-soft); color: var(--hand-l); }
+.hand-tag.R { background: var(--hand-r-soft); color: var(--hand-r); }
+.abacus.two-hands .ab-col[data-hand="L"] { background: rgba(110, 150, 255, .16); }
+.abacus.two-hands .ab-col[data-hand="R"] { background: rgba(255, 190, 100, .16); }
+.abacus.two-hands .ab-col.flash { background: rgba(255, 230, 170, .38); }
+.ab-labels small { display: block; font-size: .95em; font-weight: 700; }
+.ab-labels small.L { color: var(--hand-l); }
+.ab-labels small.R { color: var(--hand-r); }
+.mode-toggle { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 5px 12px 5px 6px; font-weight: 700; font-size: .88rem; cursor: pointer; min-height: 36px; }
+.mode-toggle:hover { border-color: var(--ai); }
+.mode-toggle .sw { width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; transition: background .15s; flex: none; }
+.mode-toggle .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.mode-toggle[aria-pressed="true"] .sw { background: var(--ai); }
+.mode-toggle[aria-pressed="true"] .sw::after { transform: translateX(14px); }
+.head-side { display: grid; justify-items: end; gap: 8px; }
+
+/* ---------- Bàn tay ---------- */
+.hands { display: grid; justify-items: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; max-width: 100%; }
+.hands-row { display: flex; gap: clamp(6px, 3vw, 22px); align-items: flex-end; }
+.hand { display: grid; justify-items: center; gap: 2px; border-radius: var(--r-md); padding: 6px; transition: background .2s; }
+.hand.flash { background: var(--ai-soft); }
+.hand svg { width: clamp(108px, 32vw, 150px); height: auto; display: block; overflow: visible; }
+.hand-label { font-size: .78rem; font-weight: 600; color: var(--muted); text-align: center; line-height: 1.35; }
+.hand-digit { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.hands .fg { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .2s cubic-bezier(.3, .7, .4, 1); }
+.hands .fg rect { fill: var(--skin-lo); stroke: var(--skin-line); stroke-width: 1.5; }
+.hands .fg.up rect { fill: var(--skin); }
+.hands .fg .nail { fill: var(--nail); opacity: 0; transition: opacity .15s; }
+.hands .fg.up .nail { opacity: 1; }
+.hands .fg:not(.up) { transform: scaleY(.36); }
+.hands .fg.th:not(.up) { transform: rotate(64deg); }
+.hands .fg.th.up { transform: rotate(-34deg); }
+.hands .palm { fill: var(--skin); stroke: var(--skin-line); stroke-width: 1.5; }
+.hands .hit { fill: transparent; cursor: pointer; }
+.hands.locked .hit { cursor: default; }
+
+/* ---------- Trang tính nhẩm ---------- */
+.stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px; display: grid; gap: 6px; align-content: start; box-shadow: var(--shadow); }
+.stage-n { font-family: var(--font-display); font-weight: 800; font-size: 1.9rem; color: var(--ai); line-height: 1; }
+.stage h3 { font-size: 1.15rem; }
+.stage p { color: var(--muted); font-size: .92rem; }
+.stage .pill { justify-self: start; }
+.duo { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; align-items: flex-end; }
+.flash-wrap { position: relative; }
+.flash-cover { position: absolute; inset: 0; display: grid; place-items: center; background: var(--surface-2); border: 2px dashed var(--line); border-radius: 12px; font-family: var(--font-display); font-size: 3rem; font-weight: 800; color: var(--muted); }
+.center-col { display: grid; justify-items: center; gap: 12px; text-align: center; }
+
 .footer { color: var(--muted); font-size: .82rem; text-align: center; padding-block: 24px; }
 
 @media (max-width: 760px) {
@@ -312,7 +375,8 @@ main { padding-block: 24px 64px; }
   .lesson { grid-template-columns: minmax(0, 1fr); }
   .guide { grid-template-columns: minmax(0, 1fr); }
   .free { grid-template-columns: minmax(0, 1fr); }
-  .nav button { padding: 6px 9px; }
+  .nav button { padding: 6px 8px; font-size: .84rem; }
+  .nav { gap: 0; }
   .star-total { margin-left: auto; }
   .nav { order: 3; width: 100%; margin-left: 0; justify-content: space-between; }
 }
@@ -330,7 +394,8 @@ main { padding-block: 24px 64px; }
     </button>
     <nav class="nav" id="nav">
       <button data-action="nav" data-to="home">Cấp độ</button>
-      <button data-action="nav" data-to="free">Bàn tính tự do</button>
+      <button data-action="nav" data-to="free">Bàn tính</button>
+      <button data-action="nav" data-to="mental">Tính nhẩm</button>
       <button data-action="nav" data-to="parents">Phụ huynh</button>
     </nav>
     <span class="star-total" id="starTotal" title="Tổng số sao">★ 0</span>
@@ -411,7 +476,16 @@ const STORE_KEY = 'soroban-progress-v1';
 function loadProgress() {
   let d = {};
   try { d = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { d = {}; }
-  return Object.assign({ levels: {}, sound: true, unlockAll: false, speed: 'slow' }, d);
+  d = Object.assign({ levels: {}, sound: true, unlockAll: false, speed: 'slow', twoHands: false, flashBest: 0 }, d);
+  if (!d.ver) {
+    // Phiên bản 2 chèn cấp "Bàn tính trên hai bàn tay" vào vị trí 8: dời số sao của cấp Anzan cũ
+    const L = d.levels;
+    if (L[9]) L[10] = L[9];
+    if (L[8]) L[9] = L[8];
+    delete L[8];
+    d.ver = 2;
+  }
+  return d;
 }
 function saveProgress() { try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) { /* bỏ qua */ } }
 let progress = loadProgress();
@@ -427,6 +501,7 @@ class Abacus {
     this.onChange = opts.onChange || (() => {});
     this.labels = opts.labels !== false;
     this.big = !!opts.big;
+    this.hands = opts.hands ?? progress.twoHands;
     this.digits = new Array(this.rods).fill(0);
     this.build();
     if (opts.value) this.setValue(opts.value, true);
@@ -436,14 +511,14 @@ class Abacus {
     for (let i = this.rods - 1; i >= 0; i--) {
       let earth = '';
       for (let k = 0; k < 4; k++) earth += `<div class="bead e" data-rod="${i}" data-b="${k}" style="--k:${k}"></div>`;
-      cols.push(`<div class="ab-col" data-rod="${i}" tabindex="${this.interactive ? 0 : -1}" role="group" aria-label="Cột ${PLACE[i]}">
+      cols.push(`<div class="ab-col" data-rod="${i}" data-hand="${i === 0 ? 'R' : 'L'}" tabindex="${this.interactive ? 0 : -1}" role="group" aria-label="Cột ${PLACE[i]}">
         <div class="ab-heaven"><div class="bead h" data-rod="${i}" data-b="h"></div></div>
         <div class="ab-beam">${i % 3 === 0 ? '<span class="ab-dot"></span>' : ''}</div>
         <div class="ab-earth">${earth}</div></div>`);
     }
     const labels = [];
-    for (let i = this.rods - 1; i >= 0; i--) labels.push(`<span>${PLACE_LABEL[i] || ''}</span>`);
-    this.el.innerHTML = `<div class="abacus${this.big ? ' big' : ''}${this.interactive ? '' : ' locked'}">
+    for (let i = this.rods - 1; i >= 0; i--) labels.push(`<span>${PLACE_LABEL[i] || ''}${this.hands ? `<small class="${i === 0 ? 'R' : 'L'}">Tay ${i === 0 ? 'phải' : 'trái'}</small>` : ''}</span>`);
+    this.el.innerHTML = `<div class="abacus${this.big ? ' big' : ''}${this.interactive ? '' : ' locked'}${this.hands ? ' two-hands' : ''}">
       <div class="ab-frame"><div class="ab-cols">${cols.join('')}</div></div>
       ${this.labels ? `<div class="ab-labels" aria-hidden="true">${labels.join('')}</div>` : ''}</div>`;
     this.root = this.el.firstElementChild;
@@ -503,51 +578,150 @@ class Abacus {
 }
 
 /* =========================================================
+   Bàn tính trên hai bàn tay: tay phải = cột đơn vị, tay trái = cột chục.
+   Ngón cái = hạt trên (5), bốn ngón còn lại = bốn hạt dưới (mỗi ngón 1).
+   Cùng giao diện với Abacus để dùng chung cho minh họa và luyện tập.
+   ========================================================= */
+class Hands {
+  constructor(el, opts = {}) {
+    this.el = el; this.rods = 2;
+    this.interactive = opts.interactive !== false;
+    this.showDigits = opts.showDigits !== false;
+    this.onChange = opts.onChange || (() => {});
+    this.digits = [0, 0];
+    this.build();
+    if (opts.value) this.setValue(opts.value, true);
+  }
+  handSvg(idx) {
+    const fingers = [[36, 22], [56, 12], [76, 20], [96, 36]].map(([x, y], k) =>
+      `<g class="fg" data-hand="${idx}" data-f="${k}"><rect x="${x}" y="${y}" width="18" height="${106 - y}" rx="9"/><ellipse class="nail" cx="${x + 9}" cy="${y + 10}" rx="5" ry="6"/></g>`).join('');
+    const hits = [[36, 12], [56, 4], [76, 12], [96, 28]].map(([x, y], k) =>
+      `<rect class="hit" data-hand="${idx}" data-f="${k}" x="${x - 1}" y="${y}" width="20" height="${88 - y}"/>`).join('');
+    const thumb = `<g class="fg th" data-hand="${idx}" data-f="t"><rect x="24" y="74" width="21" height="58" rx="10.5"/><ellipse class="nail" cx="34.5" cy="85" rx="5.5" ry="6.5"/></g>`;
+    const inner = `${fingers}<rect class="palm" x="32" y="86" width="86" height="74" rx="24"/>${thumb}${hits}<rect class="hit" data-hand="${idx}" data-f="t" x="0" y="56" width="32" height="60"/>`;
+    return `<svg viewBox="-4 0 158 164" aria-hidden="true">${idx === 1 ? `<g transform="translate(150,0) scale(-1,1)">${inner}</g>` : inner}</svg>`;
+  }
+  build() {
+    this.el.innerHTML = `<div class="hands${this.interactive ? '' : ' locked'}"><div class="hands-row">${[1, 0].map(i => `
+      <div class="hand" data-hi="${i}" role="group" tabindex="${this.interactive ? 0 : -1}" aria-label="${i ? 'Tay trái, cột chục' : 'Tay phải, cột đơn vị'}">
+        ${this.showDigits ? `<div class="hand-digit" data-hd="${i}">0</div>` : ''}
+        ${this.handSvg(i)}
+        <div class="hand-label"><span class="hand-tag ${i ? 'L' : 'R'}">Tay ${i ? 'trái' : 'phải'}</span><br>${i ? 'Chục' : 'Đơn vị'}</div>
+      </div>`).join('')}</div></div>`;
+    this.root = this.el.firstElementChild;
+    this.root.addEventListener('click', e => this.handleClick(e));
+    this.root.addEventListener('keydown', e => this.handleKey(e));
+    this.render();
+  }
+  setInteractive(v) {
+    this.interactive = v;
+    this.root.classList.toggle('locked', !v);
+    this.root.querySelectorAll('.hand').forEach(h => h.tabIndex = v ? 0 : -1);
+  }
+  handleClick(e) {
+    if (!this.interactive) return;
+    const f = e.target.closest('[data-f]'); if (!f) return;
+    const i = +f.dataset.hand, d = this.digits[i];
+    let h = d >= 5, c = d % 5;
+    if (f.dataset.f === 't') h = !h;
+    else { const k = +f.dataset.f; c = k < c ? k : k + 1; }
+    this.setDigit(i, (h ? 5 : 0) + c);
+  }
+  handleKey(e) {
+    if (!this.interactive) return;
+    const hand = e.target.closest('.hand'); if (!hand) return;
+    const i = +hand.dataset.hi, d = this.digits[i];
+    if (e.key === 'ArrowUp') { e.preventDefault(); this.setDigit(i, Math.min(9, d + 1)); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); this.setDigit(i, Math.max(0, d - 1)); }
+    else if (/^[0-9]$/.test(e.key)) { e.preventDefault(); this.setDigit(i, +e.key); }
+  }
+  setDigit(i, v, silent) {
+    if (this.digits[i] === v) return;
+    this.digits[i] = v; this.render();
+    if (!silent) { Sound.click(); this.onChange(this.getValue()); }
+  }
+  setDigits(arr) { this.digits = [arr[0] || 0, arr[1] || 0]; this.render(); }
+  setValue(n, silent) { this.setDigits(toDigits(n, 2)); if (!silent) this.onChange(this.getValue()); }
+  getValue() { return this.digits[1] * 10 + this.digits[0]; }
+  flashRod(i) { this.root.querySelectorAll('.hand').forEach(h => h.classList.toggle('flash', i != null && +h.dataset.hi === i)); }
+  render() {
+    this.root.querySelectorAll('.fg').forEach(g => {
+      const d = this.digits[+g.dataset.hand], f = g.dataset.f;
+      g.classList.toggle('up', f === 't' ? d >= 5 : +f < d % 5);
+    });
+    this.root.querySelectorAll('[data-hd]').forEach(el => { el.textContent = this.digits[+el.dataset.hd]; });
+    this.root.querySelectorAll('.hand').forEach(h => { const i = +h.dataset.hi; h.setAttribute('aria-label', `${i ? 'Tay trái, cột chục' : 'Tay phải, cột đơn vị'}: ${this.digits[i]}`); });
+  }
+}
+
+/* =========================================================
    "Bộ não" Soroban: tách một phép tính thành từng bước gạt hạt
    (trực tiếp, bạn nhỏ = hợp 5, bạn lớn = hợp 10, kết hợp)
    ========================================================= */
 function canAddDirect(d, n) { if (d + n > 9) return false; if (d >= 5 && n >= 5) return false; return (d % 5) + (n % 5) <= 4; }
 function canSubDirect(d, n) { if (d < n) return false; if (n >= 5 && d < 5) return false; return (d % 5) >= (n % 5); }
-function movesAdd(n) { const p = []; if (n >= 5) p.push('gạt hạt trên xuống'); if (n % 5) p.push(`đẩy ${n % 5} hạt dưới lên`); return p.join(' và '); }
-function movesSub(n) { const p = []; if (n >= 5) p.push('gạt hạt trên lên'); if (n % 5) p.push(`kéo ${n % 5} hạt dưới xuống`); return p.join(' và '); }
+const handTag = p => `<span class="hand-tag ${p === 0 ? 'R' : 'L'}">Tay ${p === 0 ? 'phải' : 'trái'}</span>`;
+/* Ba "cách nói" cho cùng một bước: bàn tính 1 tay, bàn tính 2 tay, và bàn tay (ngón tay) */
+const VOCAB = {
+  abacus: {
+    col: p => `Cột ${PLACE[p]}`, at: p => `ở cột ${PLACE[p]}`, start: 'bàn tính',
+    up5: 'gạt hạt trên xuống', upK: k => `đẩy ${k} hạt dưới lên`, dn5: 'gạt hạt trên lên', dnK: k => `kéo ${k} hạt dưới xuống`,
+    lack: 'không đủ hạt dưới', lackAll: 'không đủ hạt', carry: '', borrow: ''
+  },
+  twohand: {
+    col: p => `${handTag(p)} cột ${PLACE[p]}`, at: p => `ở cột ${PLACE[p]}`, start: 'bàn tính',
+    up5: 'ngón trỏ gạt hạt trên xuống', upK: k => `ngón cái đẩy ${k} hạt dưới lên`, dn5: 'ngón trỏ gạt hạt trên lên', dnK: k => `ngón trỏ kéo ${k} hạt dưới xuống`,
+    lack: 'không đủ hạt dưới', lackAll: 'không đủ hạt',
+    carry: ' <i>Hai tay làm cùng lúc: tay phải bớt, tay trái nhớ 1.</i>',
+    borrow: ' <i>Hai tay làm cùng lúc: tay trái mượn 1, tay phải thêm bạn lớn.</i>'
+  },
+  fingers: {
+    col: p => p === 0 ? `${handTag(0)} (đơn vị)` : p === 1 ? `${handTag(1)} (chục)` : `Cột ${PLACE[p]}`, at: p => p === 0 ? 'ở tay phải' : 'ở tay trái', start: 'hai bàn tay',
+    up5: 'mở ngón cái', upK: k => `mở thêm ${k} ngón`, dn5: 'gập ngón cái', dnK: k => `gập ${k} ngón`,
+    lack: 'không đủ ngón', lackAll: 'không đủ ngón', carry: '', borrow: ''
+  }
+};
+function movesAdd(n, V) { const p = []; if (n >= 5) p.push(V.up5); if (n % 5) p.push(V.upK(n % 5)); return p.join(' và '); }
+function movesSub(n, V) { const p = []; if (n >= 5) p.push(V.dn5); if (n % 5) p.push(V.dnK(n % 5)); return p.join(' và '); }
 
-function planCalc(start, ops, rods = 5) {
+function planCalc(start, ops, rods = 5, vocab = 'abacus') {
+  const V = VOCAB[vocab] || VOCAB.abacus;
   const v = toDigits(start, rods + 2);
   const steps = [], kinds = new Set();
   const push = (text, kind, rod) => { steps.push({ text, kind, rod, digits: v.slice() }); if (kind && kind !== 'head') kinds.add(kind); };
 
   function add(p, n, prefix = '') {
-    const d = v[p], pl = PLACE[p];
+    const d = v[p], col = V.col(p);
     if (d + n <= 9) {
-      if (canAddDirect(d, n)) { v[p] += n; push(`${prefix}Cột ${pl}: +${n} → ${movesAdd(n)}.`, 'direct', p); }
-      else { v[p] += n; push(`${prefix}Cột ${pl}: +${n} nhưng không đủ hạt dưới → <b>bạn nhỏ</b>: +${n} = +5 − ${5 - n}. Gạt hạt trên xuống, kéo ${5 - n} hạt dưới xuống.`, 'five', p); }
+      if (canAddDirect(d, n)) { v[p] += n; push(`${prefix}${col}: +${n} → ${movesAdd(n, V)}.`, 'direct', p); }
+      else { v[p] += n; push(`${prefix}${col}: +${n} nhưng ${V.lack} → <b>bạn nhỏ</b>: +${n} = +5 − ${5 - n}. ${cap(V.up5)}, ${V.dnK(5 - n)}.`, 'five', p); }
     } else {
       const c = 10 - n, direct = canSubDirect(d, c);
-      const inner = direct ? `bớt ${c}: ${movesSub(c)}` : `bớt ${c} bằng bạn nhỏ (−${c} = +${5 - c} − 5): đẩy ${5 - c} hạt dưới lên, gạt hạt trên lên`;
+      const inner = direct ? `bớt ${c}: ${movesSub(c, V)}` : `bớt ${c} bằng bạn nhỏ (−${c} = +${5 - c} − 5): ${V.upK(5 - c)}, ${V.dn5}`;
       v[p] -= c;
-      push(`${prefix}Cột ${pl}: +${n} vượt quá 9 → <b>bạn lớn</b>: +${n} = −${c} + 10. Ở cột ${pl} ${inner}.`, 'ten', p);
+      push(`${prefix}${col}: +${n} vượt quá 9 → <b>bạn lớn</b>: +${n} = −${c} + 10. ${cap(V.at(p))} ${inner}.${p === 0 ? V.carry : ''}`, 'ten', p);
       if (!direct) kinds.add('mixed');
       add(p + 1, 1, 'Nhớ 1 → ');
     }
   }
   function sub(p, n, prefix = '') {
-    const d = v[p], pl = PLACE[p];
+    const d = v[p], col = V.col(p);
     if (d >= n) {
-      if (canSubDirect(d, n)) { v[p] -= n; push(`${prefix}Cột ${pl}: −${n} → ${movesSub(n)}.`, 'direct', p); }
-      else { v[p] -= n; push(`${prefix}Cột ${pl}: −${n} nhưng không đủ hạt dưới → <b>bạn nhỏ</b>: −${n} = +${5 - n} − 5. Đẩy ${5 - n} hạt dưới lên, gạt hạt trên lên.`, 'five', p); }
+      if (canSubDirect(d, n)) { v[p] -= n; push(`${prefix}${col}: −${n} → ${movesSub(n, V)}.`, 'direct', p); }
+      else { v[p] -= n; push(`${prefix}${col}: −${n} nhưng ${V.lack} → <b>bạn nhỏ</b>: −${n} = +${5 - n} − 5. ${cap(V.upK(5 - n))}, ${V.dn5}.`, 'five', p); }
     } else {
       const c = 10 - n;
-      push(`${prefix}Cột ${pl}: −${n} nhưng không đủ hạt → <b>bạn lớn</b>: −${n} = −10 + ${c}.`, 'ten', p);
+      push(`${prefix}${col}: −${n} nhưng ${V.lackAll} → <b>bạn lớn</b>: −${n} = −10 + ${c}.${p === 0 ? V.borrow : ''}`, 'ten', p);
       sub(p + 1, 1, 'Mượn 1 → ');
       const d2 = v[p];
-      if (canAddDirect(d2, c)) { v[p] += c; push(`Cột ${pl}: thêm bạn lớn ${c} → ${movesAdd(c)}.`, 'ten', p); }
-      else { v[p] += c; kinds.add('mixed'); push(`Cột ${pl}: thêm bạn lớn ${c} bằng bạn nhỏ (+${c} = +5 − ${5 - c}): gạt hạt trên xuống, kéo ${5 - c} hạt dưới xuống.`, 'ten', p); }
+      if (canAddDirect(d2, c)) { v[p] += c; push(`${col}: thêm bạn lớn ${c} → ${movesAdd(c, V)}.`, 'ten', p); }
+      else { v[p] += c; kinds.add('mixed'); push(`${col}: thêm bạn lớn ${c} bằng bạn nhỏ (+${c} = +5 − ${5 - c}): ${V.up5}, ${V.dnK(5 - c)}.`, 'ten', p); }
     }
   }
 
-  steps.push({ text: `Bắt đầu: bàn tính có số ${start}.`, kind: 'head', rod: null, digits: v.slice() });
+  steps.push({ text: `Bắt đầu: ${V.start} có số ${start}.`, kind: 'head', rod: null, digits: v.slice() });
   ops.forEach(({ sign, n }) => {
-    push(`${sign > 0 ? 'Cộng' : 'Trừ'} ${n}${n >= 10 ? ' — làm cột trái trước, cột phải sau' : ''}:`, 'head', null);
+    push(`${sign > 0 ? 'Cộng' : 'Trừ'} ${n}${n >= 10 ? (vocab === 'fingers' ? ' — tay trái trước, tay phải sau' : ' — làm cột trái trước, cột phải sau') : ''}:`, 'head', null);
     const nd = String(n).split('').map(Number).reverse();
     for (let p = nd.length - 1; p >= 0; p--) {
       if (!nd[p]) continue;
@@ -556,6 +730,7 @@ function planCalc(start, ops, rods = 5) {
   });
   return { steps, kinds, result: fromDigits(v) };
 }
+const abacusVocab = forceHands => (forceHands || progress.twoHands) ? 'twohand' : 'abacus';
 
 /* Tạo đề tính toán có kiểm soát loại kỹ thuật cần dùng */
 function genCalc(maker, filter, maxResult = 999) {
@@ -682,7 +857,8 @@ const LEVELS = [
       { title: 'Cộng là gạt hạt vào', body: ['Muốn cộng, con gạt thêm hạt <b>vào sát xà ngang</b>.', 'Ví dụ 2 + 2: đã có 2 hạt dưới, đẩy thêm 2 hạt dưới lên → 4.'], demo: { kind: 'plan', rods: 2, start: 2, ops: [{ sign: 1, n: 2 }] } },
       { title: 'Cộng với số 5 trở lên', body: ['1 + 5: gạt hạt trên xuống là xong.', '3 + 6: 6 là 5 và 1 → gạt hạt trên xuống, đẩy 1 hạt dưới lên.'], demo: { kind: 'plan', rods: 2, start: 3, ops: [{ sign: 1, n: 6 }] } },
       { title: 'Trừ là gạt hạt ra', body: ['Muốn trừ, con gạt hạt <b>ra xa xà ngang</b>.', '8 − 7: 7 là 5 và 2 → gạt hạt trên lên, kéo 2 hạt dưới xuống.'], demo: { kind: 'plan', rods: 2, start: 8, ops: [{ sign: -1, n: 7 }] } },
-      { title: 'Số hai chữ số: cột trái trước', body: ['Soroban luôn tính <b>từ trái sang phải</b>: cột chục trước, cột đơn vị sau.', '12 + 35: cột chục +3, rồi cột đơn vị +5.'], demo: { kind: 'plan', rods: 3, start: 12, ops: [{ sign: 1, n: 35 }] } }
+      { title: 'Số hai chữ số: cột trái trước', body: ['Soroban luôn tính <b>từ trái sang phải</b>: cột chục trước, cột đơn vị sau.', '12 + 35: cột chục +3, rồi cột đơn vị +5.'], demo: { kind: 'plan', rods: 3, start: 12, ops: [{ sign: 1, n: 35 }] } },
+      { title: 'Dùng cả hai tay', body: ['Khi đã quen, con dùng <b>hai tay</b>: <span class="hand-tag R">Tay phải</span> lo cột đơn vị, <span class="hand-tag L">Tay trái</span> lo cột chục trở lên.', 'Mỗi tay vẫn dùng ngón cái đẩy hạt dưới lên, ngón trỏ kéo hạt dưới xuống và gạt hạt trên.', 'Bật <b>Chế độ 2 tay</b> (công tắc ở đầu trang) để mọi bài học và gợi ý ghi rõ tay nào, ngón nào.'], demo: { kind: 'plan', rods: 3, start: 34, ops: [{ sign: 1, n: 25 }], hands: true } }
     ],
     guide: {
       goal: 'Con cộng, trừ được khi có đủ hạt để gạt trực tiếp (chưa cần bạn nhỏ, bạn lớn).',
@@ -739,7 +915,8 @@ const LEVELS = [
       { title: 'Cộng có nhớ', body: ['8 + 3: cột đơn vị không đủ chỗ cho 3.', 'Ta nói: <b>cộng 3 = trừ 7, cộng 10</b> (7 là bạn lớn của 3).', 'Bớt 7 ở cột đơn vị, rồi thêm 1 ở cột chục.'], demo: { kind: 'plan', rods: 2, start: 8, ops: [{ sign: 1, n: 3 }] } },
       { title: 'Trừ có mượn', body: ['12 − 5: cột đơn vị chỉ có 2.', 'Ta nói: <b>trừ 5 = trừ 10, cộng 5</b>.', 'Bớt 1 ở cột chục trước, rồi thêm 5 ở cột đơn vị.'], demo: { kind: 'plan', rods: 2, start: 12, ops: [{ sign: -1, n: 5 }] } },
       { title: 'Khi cần cả bạn nhỏ', body: ['6 + 6: phải bớt 4 (bạn lớn của 6), nhưng cột chỉ có 1 hạt dưới.', 'Bớt 4 bằng bạn nhỏ: cộng 1, trừ 5. Sau đó nhớ 1 sang cột chục.'], demo: { kind: 'plan', rods: 2, start: 6, ops: [{ sign: 1, n: 6 }] } },
-      { title: 'Nhớ liên tiếp', body: ['95 + 7: nhớ 1 vào cột chục, nhưng cột chục đã là 9 — nên lại nhớ tiếp sang cột trăm.'], demo: { kind: 'plan', rods: 3, start: 95, ops: [{ sign: 1, n: 7 }] } }
+      { title: 'Nhớ liên tiếp', body: ['95 + 7: nhớ 1 vào cột chục, nhưng cột chục đã là 9 — nên lại nhớ tiếp sang cột trăm.'], demo: { kind: 'plan', rods: 3, start: 95, ops: [{ sign: 1, n: 7 }] } },
+      { title: 'Bạn lớn bằng hai tay', body: ['Với hai tay, bạn lớn nhanh hơn nhiều: <span class="hand-tag R">Tay phải</span> bớt bạn lớn ở cột đơn vị, <b>cùng lúc</b> <span class="hand-tag L">Tay trái</span> nhớ 1 ở cột chục.', 'Ví dụ 8 + 7: tay phải bớt 3, tay trái thêm 1 → 15.'], demo: { kind: 'plan', rods: 2, start: 8, ops: [{ sign: 1, n: 7 }], hands: true } }
     ],
     guide: {
       goal: 'Con thuộc các cặp "bạn lớn" (1–9, 2–8, 3–7, 4–6, 5–5), làm được cộng có nhớ và trừ có mượn.',
@@ -777,19 +954,54 @@ const LEVELS = [
     }
   },
   {
-    id: 8, kyu: '3 kyū', name: 'Tính nhẩm Anzan', short: 'Hình dung bàn tính trong đầu, tính dãy số một chữ số chạy nhanh.',
+    id: 8, kyu: '3 kyū', name: 'Bàn tính trên hai bàn tay', short: 'Mỗi bàn tay là một cột: ngón cái bằng 5, mỗi ngón còn lại bằng 1.',
+    type: 'hands', rods: 2, count: 10,
+    gen: i => {
+      if (i < 3) return { type: 'hand-set', answer: i === 0 ? rnd(1, 9) : rnd(10, 99) };
+      const q = genCalc(() => {
+        const sign = Math.random() < .55 ? 1 : -1;
+        return i < 6 ? { start: rnd(1, 9), ops: [{ sign, n: rnd(1, 9) }] } : { start: rnd(10, 89), ops: [{ sign, n: rnd(2, 40) }] };
+      }, k => k.size > 0, 99);
+      if (q) q.type = 'hand-calc';
+      return q;
+    },
+    lesson: [
+      { title: 'Mỗi bàn tay là một cột', body: ['<span class="hand-tag R">Tay phải</span> là cột <b>đơn vị</b>, <span class="hand-tag L">Tay trái</span> là cột <b>chục</b>.', '<b>Ngón cái</b> giống hạt trên: giơ lên là <b>5</b>. Bốn ngón còn lại giống bốn hạt dưới: mỗi ngón giơ lên là <b>1</b>.', 'Ngón giơ lên thì được đếm, ngón gập xuống thì không. Con bấm thử vào các ngón tay nhé!'], demo: { kind: 'free', tool: 'hands' } },
+      { title: 'Đếm từ 1 đến 9', body: ['1 đến 4: giơ lần lượt ngón trỏ, ngón giữa, ngón áp út, ngón út.', '5: chỉ giơ ngón cái. 6 đến 9: ngón cái và thêm các ngón khác — giống hệt trên bàn tính!'], demo: { kind: 'seq', tool: 'hands', values: [1, 2, 3, 4, 5, 6, 7, 8, 9] } },
+      { title: 'Số có hai chữ số', body: ['Số 23: tay trái giơ 2 ngón (2 chục), tay phải giơ 3 ngón (3 đơn vị).', 'Số 58: tay trái chỉ giơ ngón cái, tay phải giơ ngón cái và 3 ngón.'], demo: { kind: 'seq', tool: 'hands', values: [10, 23, 58, 76, 99] } },
+      { title: 'Bạn nhỏ trên tay', body: ['3 + 4: tay phải chỉ còn 1 ngón gập, không đủ để mở thêm 4.', '<b>Cộng 4 = cộng 5, trừ 1</b>: mở ngón cái, gập 1 ngón.'], demo: { kind: 'plan', tool: 'hands', start: 3, ops: [{ sign: 1, n: 4 }] } },
+      { title: 'Bạn lớn trên tay', body: ['8 + 5: tay phải không thể lớn hơn 9.', '<b>Cộng 5 = trừ 5, cộng 10</b>: tay phải gập ngón cái, tay trái mở 1 ngón.'], demo: { kind: 'plan', tool: 'hands', start: 8, ops: [{ sign: 1, n: 5 }] } },
+      { title: 'Cầu nối đến tính nhẩm', body: ['Bàn tay luôn đi theo con: con có thể tính ở bất cứ đâu, không cần bàn tính.', 'Khi đã nhanh, con thử làm với tay để dưới bàn, rồi chỉ <b>tưởng tượng</b> ngón tay chuyển động. Đó là bước đầu của Anzan!'], demo: null }
+    ],
+    guide: {
+      goal: 'Con dùng hai bàn tay như một bàn tính hai cột, đặt số và cộng trừ đến 99 không cần bàn tính thật.',
+      time: '1–2 tuần, 10 phút mỗi ngày',
+      steps: [
+        'Cho con giơ hai bàn tay thật, lòng bàn tay hướng ra trước. Tay phải là cột đơn vị, tay trái là cột chục.',
+        'Quy ước giống bàn tính: ngón cái = hạt trên (5); ngón trỏ, giữa, áp út, út = bốn hạt dưới, giơ theo thứ tự đó.',
+        'Bố mẹ đọc số, con giơ ngón tay thật, rồi làm lại trên màn hình để kiểm tra. 3 câu đầu của phần Luyện tập là đặt số.',
+        'Các câu sau là phép cộng trừ: hai bàn tay đã có sẵn số thứ nhất. Khuyến khích con làm trên tay thật trước, rồi mới bấm trên màn hình.',
+        'Nút "Gợi ý" giải thích bằng ngôn ngữ ngón tay: "mở ngón cái, gập 1 ngón".'
+      ],
+      mistakes: ['Giơ ngón không theo thứ tự (ngón út trước) làm con đếm nhầm.', 'Quên tay trái khi nhớ hoặc mượn.', 'Đếm ngón theo kiểu 1–10 thông thường thay vì kiểu Soroban (ngón cái = 5).'],
+      say: ['"Ngón cái là hạt trên, bằng mấy nhỉ?"', '"Tay phải hết chỗ rồi — tay trái giúp một ngón nhé!"', '"Giờ thử làm với tay để dưới bàn xem nào."']
+    }
+  },
+  {
+    id: 9, kyu: '2 kyū', name: 'Tính nhẩm Anzan', short: 'Hình dung bàn tính trong đầu, tính dãy số một chữ số chạy nhanh.',
     type: 'anzan', rods: 2, count: 8, flashBase: 1500,
     gen: i => genAnzan(i < 4 ? 3 : 4, 9, 30),
     lesson: [
       { title: 'Bàn tính trong đầu', body: ['<b>Anzan</b> (暗算) nghĩa là tính nhẩm bằng cách <b>tưởng tượng</b> bàn tính.', 'Con nhắm mắt, "nhìn" thấy bàn tính đang ở số 0.'], demo: { kind: 'free', rods: 2 } },
-      { title: 'Ngón tay gạt trong không khí', body: ['Mỗi khi một số hiện ra, con cử động ngón cái, ngón trỏ như đang gạt hạt thật.', 'Hạt trong đầu di chuyển y như trên bàn tính.'], demo: { kind: 'plan', rods: 2, start: 3, ops: [{ sign: 1, n: 4 }, { sign: 1, n: 6 }, { sign: -1, n: 2 }] } },
+      { title: 'Ngón tay gạt trong không khí', body: ['Mỗi khi một số hiện ra, con cử động ngón cái, ngón trỏ như đang gạt hạt thật — hoặc giơ, gập ngón tay như ở cấp 8.', 'Hạt trong đầu di chuyển y như trên bàn tính.'], demo: { kind: 'plan', rods: 2, start: 3, ops: [{ sign: 1, n: 4 }, { sign: 1, n: 6 }, { sign: -1, n: 2 }] } },
       { title: 'Cách chơi', body: ['Các số sẽ lần lượt hiện lên. Số màu xanh là cộng, số màu đỏ là trừ.', 'Khi hết số, con gõ kết quả. Bắt đầu với tốc độ <b>Chậm</b> nhé!'], demo: null }
     ],
     guide: {
       goal: 'Con bắt đầu tính nhẩm bằng hình ảnh bàn tính trong đầu (Anzan).',
       time: 'Luyện song song, 5 phút mỗi ngày trong nhiều tuần',
       steps: [
-        'Chỉ bắt đầu khi con đã vững cấp 6 (bạn lớn). Anzan là "chụp ảnh" động tác tay trên bàn tính thật.',
+        'Chỉ bắt đầu khi con đã vững cấp 6 (bạn lớn) và cấp 8 (bàn tay). Anzan là "chụp ảnh" động tác tay trên bàn tính thật.',
+        'Đọc thêm trang "Tính nhẩm" để biết 4 giai đoạn từ bàn tính thật đến Anzan và bài tập hình dung mỗi ngày.',
         'Trước khi chơi, cho con nhắm mắt 10 giây và tưởng tượng bàn tính ở số 0.',
         'Cho phép con cử động ngón tay trong không khí — đây là cách học đúng, không phải gian lận.',
         'Bắt đầu tốc độ Chậm. Khi con đúng ít nhất 7/8 câu liên tiếp, tăng lên Vừa rồi Nhanh.',
@@ -800,7 +1012,7 @@ const LEVELS = [
     }
   },
   {
-    id: 9, kyu: '2 kyū', name: 'Anzan hai chữ số', short: 'Tính nhẩm dãy 4 số có một hoặc hai chữ số.',
+    id: 10, kyu: '1 kyū', name: 'Anzan hai chữ số', short: 'Tính nhẩm dãy 4 số có một hoặc hai chữ số.',
     type: 'anzan', rods: 3, count: 8, flashBase: 2000,
     gen: i => genAnzan(4, i < 3 ? 15 : 40, 150),
     lesson: [
@@ -811,7 +1023,7 @@ const LEVELS = [
       goal: 'Con tính nhẩm được dãy 4 số có tới hai chữ số.',
       time: 'Nhiều tuần, tùy từng con',
       steps: [
-        'Chỉ bắt đầu khi con đạt 3 sao ở cấp 8 với tốc độ Vừa.',
+        'Chỉ bắt đầu khi con đạt 3 sao ở cấp 9 với tốc độ Vừa.',
         'Cho con làm cùng một dãy số trên bàn tính thật trước, sau đó nhẩm.',
         'Dùng nút "Xem lại" thoải mái trong giai đoạn đầu.',
         'Luyện ngắn nhưng đều: 5–10 phút mỗi ngày hiệu quả hơn 1 giờ mỗi tuần.'
@@ -826,7 +1038,7 @@ const SPEEDS = { slow: { label: 'Chậm', k: 1.35 }, mid: { label: 'Vừa', k: 1
 /* =========================================================
    Trạng thái & điều hướng
    ========================================================= */
-const state = { view: 'home', levelId: 1, tab: 'lesson', session: null, confirmReset: false, free: { rods: 5, show: true } };
+const state = { view: 'home', levelId: 1, tab: 'lesson', session: null, confirmReset: false, free: { rods: 5, show: true, tool: 'abacus' }, mental: { digits: 1, streak: 0, answer: null } };
 let widgets = [];           // các bàn tính đang hiển thị
 let animToken = 0;          // hủy hoạt ảnh cũ
 let timers = [];
@@ -835,7 +1047,7 @@ const later = (fn, ms) => { const t = setTimeout(fn, ms); timers.push(t); return
 
 const levelById = id => LEVELS.find(l => l.id === id);
 const levelStars = id => (progress.levels[id] && progress.levels[id].stars) || 0;
-const isUnlocked = id => progress.unlockAll || id === 1 || levelStars(id - 1) >= 1;
+const isUnlocked = id => progress.unlockAll || id === 1 || levelStars(id - 1) >= 1 || levelStars(id) >= 1;
 const nextLevelId = () => { const l = LEVELS.find(l => isUnlocked(l.id) && levelStars(l.id) === 0); return l ? l.id : null; };
 const totalStars = () => LEVELS.reduce((s, l) => s + levelStars(l.id), 0);
 
@@ -859,6 +1071,7 @@ function render() {
   else if (state.view === 'level') renderLevel(app);
   else if (state.view === 'free') renderFree(app);
   else if (state.view === 'parents') renderParents(app);
+  else if (state.view === 'mental') renderMental(app);
 }
 
 /* ---------- Trang chủ ---------- */
@@ -878,7 +1091,7 @@ function renderHome(app) {
       <div>
         <div class="hero-jp" lang="ja">そろばん · SOROBAN</div>
         <h1>Học bàn tính <em>Nhật Bản</em> từng bước một</h1>
-        <p class="lead">9 cấp độ từ làm quen hạt tính đến tính nhẩm Anzan. Mỗi cấp có bài học minh họa cho con, hướng dẫn riêng cho bố mẹ và phần luyện tập để nhận sao.</p>
+        <p class="lead">10 cấp độ từ làm quen hạt tính, bàn tính trên hai bàn tay, đến tính nhẩm Anzan. Mỗi cấp có bài học minh họa cho con, hướng dẫn riêng cho bố mẹ và phần luyện tập để nhận sao.</p>
         <div class="row">
           <button class="btn" data-action="open-level" data-id="${nid || 1}">${nid && nid > 1 ? `Học tiếp cấp ${nid}` : 'Bắt đầu học'}</button>
           <button class="btn ghost" data-action="nav" data-to="parents">Hướng dẫn cho phụ huynh</button>
@@ -903,6 +1116,12 @@ function renderHome(app) {
 }
 
 /* ---------- Trang cấp độ ---------- */
+function handsToggle() {
+  return `<button class="mode-toggle" data-action="toggle-hands" aria-pressed="${!!progress.twoHands}"><span class="sw"></span>Chế độ 2 tay</button>`;
+}
+const demoTool = d => d.tool === 'hands' ? Hands : Abacus;
+const demoVocab = d => d.tool === 'hands' ? 'fingers' : abacusVocab(d.hands);
+
 function renderLevel(app) {
   const L = levelById(state.levelId);
   const st = levelStars(L.id);
@@ -911,7 +1130,7 @@ function renderLevel(app) {
     <button class="crumb" data-action="nav" data-to="home">← Tất cả cấp độ</button>
     <div class="level-head">
       <div><div class="eyebrow">Cấp ${L.id} · ${L.kyu}</div><h1>${L.name}</h1><p>${L.short}</p></div>
-      <div>${starsHtml(st)}</div>
+      <div class="head-side">${starsHtml(st)}${L.type !== 'hands' ? handsToggle() : ''}</div>
     </div>
     <div class="tabs" role="tablist">${tabs.map(([k, t]) => `<button role="tab" aria-selected="${state.tab === k}" data-action="tab" data-tab="${k}">${t}</button>`).join('')}</div>
     <div id="tabBody"></div>`;
@@ -929,7 +1148,7 @@ function renderLesson(body, L) {
         <div class="ab-value" data-val>${c.demo.kind === 'plan' ? c.demo.start : 0}</div>
         <div data-ab></div>
         ${c.demo.kind !== 'free' ? `<button class="btn small" data-action="demo-play" data-i="${i}">▶ Xem minh họa</button>` : ''}
-        <div class="demo-caption" data-cap>${c.demo.kind === 'free' ? 'Con hãy bấm vào hạt!' : ''}</div>
+        <div class="demo-caption" data-cap>${c.demo.kind === 'free' ? (c.demo.tool === 'hands' ? 'Con hãy bấm vào ngón tay!' : 'Con hãy bấm vào hạt!') : ''}</div>
         ${c.demo.kind === 'plan' ? '<ol class="steps" data-steps></ol>' : ''}
       </div>` : ''}
     </article>`).join('')}
@@ -939,10 +1158,11 @@ function renderLesson(body, L) {
     if (!c.demo) return;
     const box = body.querySelector(`[data-demo="${i}"]`);
     const valEl = box.querySelector('[data-val]');
-    const ab = new Abacus(box.querySelector('[data-ab]'), { rods: c.demo.rods, interactive: c.demo.kind === 'free', onChange: v => { valEl.textContent = v; } });
+    const Tool = demoTool(c.demo);
+    const ab = new Tool(box.querySelector('[data-ab]'), { rods: c.demo.rods, hands: c.demo.hands || undefined, interactive: c.demo.kind === 'free', onChange: v => { valEl.textContent = v; } });
     if (c.demo.kind === 'plan') {
       ab.setValue(c.demo.start, true);
-      const plan = planCalc(c.demo.start, c.demo.ops);
+      const plan = planCalc(c.demo.start, c.demo.ops, 5, demoVocab(c.demo));
       box.querySelector('[data-steps]').innerHTML = plan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('');
       box.querySelector('[data-cap]').textContent = `${c.demo.start} ${c.demo.ops.map(o => fmtOp(o.sign, o.n)).join(' ')} = ?`;
     }
@@ -960,10 +1180,10 @@ function playDemo(i) {
     c.demo.values.forEach((v, k) => later(() => {
       if (!alive()) return;
       ab.setValue(v, true); valEl.textContent = v; Sound.click();
-      cap.textContent = v === 0 ? 'Bàn tính trống: số 0' : `${v} — ${readVi(v)}`;
+      cap.textContent = v === 0 ? 'Số 0' : `${v} — ${readVi(v)}`;
     }, k * 1300));
   } else if (c.demo.kind === 'plan') {
-    const plan = planCalc(c.demo.start, c.demo.ops);
+    const plan = planCalc(c.demo.start, c.demo.ops, 5, demoVocab(c.demo));
     const lis = box.querySelectorAll('[data-steps] li');
     lis.forEach(li => li.classList.remove('cur', 'done'));
     plan.steps.forEach((s, k) => later(() => {
@@ -1025,16 +1245,19 @@ function renderPractice(body, L) {
     <div class="qcard" id="qcard"></div>
   </div>`;
   const card = $('#qcard');
-  if (q.type === 'set') renderSetQ(card, L, S, q);
+  if (q.type === 'set' || q.type === 'hand-set') renderSetQ(card, L, S, q);
   else if (q.type === 'read') renderReadQ(card, L, S, q);
-  else if (q.type === 'calc') renderCalcQ(card, L, S, q);
+  else if (q.type === 'calc' || q.type === 'hand-calc') renderCalcQ(card, L, S, q);
   else renderAnzanQ(card, L, S, q);
+  if (S.solved) { if (S.lastFeedback) feedback(S.lastFeedback[0], S.lastFeedback[1]); if (widgets[0]) widgets[0].setInteractive(false); showNext(S); }
+  else if (S.hinted && $('#hintBox')) showHint(true);
 }
 function practiceIntro(L) {
   return {
     set: 'Máy đọc một số, con đặt số đó lên bàn tính rồi bấm "Kiểm tra". Số trên bàn tính được ẩn để con tự quan sát hạt.',
     read: 'Bàn tính hiện một số. Con nhìn hạt và chọn đáp án đúng.',
     calc: 'Bàn tính đã có sẵn số thứ nhất. Con gạt tiếp phép tính rồi bấm "Kiểm tra". Bí thì bấm "Gợi ý".',
+    hands: 'Tay phải là cột đơn vị, tay trái là cột chục. Bấm vào ngón tay để giơ lên hoặc gập xuống. 3 câu đầu con tạo số, các câu sau con cộng trừ trên hai bàn tay. Con làm cùng trên tay thật của mình nhé!',
     anzan: 'Các số lần lượt hiện lên. Con tưởng tượng bàn tính trong đầu, gạt theo, rồi nhập kết quả.'
   }[L.type];
 }
@@ -1046,15 +1269,16 @@ function practiceButtons(extra = '') {
   return `<div class="row" style="justify-content:center">${extra}<button class="btn" data-action="check" id="checkBtn">Kiểm tra</button></div>`;
 }
 function renderSetQ(card, L, S, q) {
+  const onHands = q.type === 'hand-set';
   card.innerHTML = `
-    <div class="q-label">Con hãy đặt số</div>
+    <div class="q-label">${onHands ? 'Con hãy giơ ngón tay để tạo số' : 'Con hãy đặt số'}</div>
     <div class="q-number">${q.answer}</div>
     <div class="q-words">${cap(readVi(q.answer))}</div>
     <div id="pAb"></div>
-    ${practiceButtons('<button class="btn ghost" data-action="clear">Xóa bàn tính</button>')}
+    ${practiceButtons(`<button class="btn ghost" data-action="clear">${onHands ? 'Gập hết ngón' : 'Xóa bàn tính'}</button>`)}
     <div class="feedback" id="fb" role="status"></div>
     <div id="after"></div>`;
-  widgets[0] = new Abacus($('#pAb'), { rods: L.rods, big: true });
+  widgets[0] = onHands ? new Hands($('#pAb'), { showDigits: false }) : new Abacus($('#pAb'), { rods: L.rods, big: true });
 }
 function renderReadQ(card, L, S, q) {
   card.innerHTML = `
@@ -1070,15 +1294,16 @@ function exprHtml(q) {
   return `<div class="q-column"><div>${q.start}</div>${q.ops.map(o => `<div>${fmtOp(o.sign, o.n)}</div>`).join('')}<div class="rule">?</div></div>`;
 }
 function renderCalcQ(card, L, S, q) {
+  const onHands = q.type === 'hand-calc';
   card.innerHTML = `
-    <div class="q-label">Bàn tính đã có số ${q.start}. Con gạt tiếp nhé!</div>
+    <div class="q-label">${onHands ? `Hai bàn tay đang là số ${q.start}. Con tính tiếp nhé!` : `Bàn tính đã có số ${q.start}. Con gạt tiếp nhé!`}</div>
     ${exprHtml(q)}
     <div id="pAb"></div>
     ${practiceButtons(`<button class="btn ghost" data-action="clear">Làm lại</button><button class="btn soft" data-action="hint">Gợi ý</button>`)}
     <div class="feedback" id="fb" role="status"></div>
     <div id="hintBox"></div>
     <div id="after"></div>`;
-  widgets[0] = new Abacus($('#pAb'), { rods: L.rods, big: true, value: q.start });
+  widgets[0] = onHands ? new Hands($('#pAb'), { showDigits: false, value: q.start }) : new Abacus($('#pAb'), { rods: L.rods, big: true, value: q.start });
 }
 function renderAnzanQ(card, L, S, q) {
   card.innerHTML = `
@@ -1117,7 +1342,7 @@ function playFlash() {
   }, at + 100);
 }
 
-function feedback(cls, html) { const fb = $('#fb'); if (fb) { fb.className = 'feedback ' + cls; fb.innerHTML = html; } }
+function feedback(cls, html) { const fb = $('#fb'); if (fb) { fb.className = 'feedback ' + cls; fb.innerHTML = html; } if (state.session) state.session.lastFeedback = [cls, html]; }
 function showNext(S) {
   const last = S.idx === S.qs.length - 1;
   $('#after').innerHTML = `<button class="btn good" data-action="next" id="nextBtn">${last ? 'Xem kết quả' : 'Câu tiếp theo →'}</button>`;
@@ -1154,7 +1379,7 @@ function checkAnswer() {
   if (S.attempts >= 3) {
     S.solved = true;
     feedback('no', `Chưa đúng. Đáp án là <b>${q.answer}</b>. Bàn tính đang là ${val}.`);
-    if (q.type === 'calc') showHint(true);
+    if (q.type === 'calc' || q.type === 'hand-calc') showHint(true);
     widgets[0].setValue(q.answer, true); widgets[0].setInteractive(false);
     showNext(S);
     return;
@@ -1166,7 +1391,9 @@ function showHint(silent) {
   const S = state.session, q = S.qs[S.idx];
   if (!silent) S.hinted = true;
   const box = $('#hintBox'); if (!box) return;
-  box.innerHTML = `<div class="hint-box"><h4>Các bước gạt hạt</h4><ol class="steps">${q.plan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('')}</ol></div>`;
+  const onHands = q.type === 'hand-calc';
+  const plan = planCalc(q.start, q.ops, 5, onHands ? 'fingers' : abacusVocab());
+  box.innerHTML = `<div class="hint-box"><h4>${onHands ? 'Các bước với ngón tay' : 'Các bước gạt hạt'}</h4><ol class="steps">${plan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('')}</ol></div>`;
 }
 
 function chooseOption(btn) {
@@ -1200,7 +1427,7 @@ function nextQuestion() {
     saveProgress();
     if (S.stars > 0) Sound.win();
   } else {
-    Object.assign(S, { idx: S.idx + 1, attempts: 0, hinted: false, solved: false });
+    Object.assign(S, { idx: S.idx + 1, attempts: 0, hinted: false, solved: false, lastFeedback: null });
   }
   render();
 }
@@ -1223,9 +1450,11 @@ function renderResult(body, L, S) {
 
 /* ---------- Bàn tính tự do ---------- */
 function renderFree(app) {
-  const F = state.free;
+  const F = state.free, onHands = F.tool === 'hands';
   app.innerHTML = `
-    <div class="level-head"><div><div class="eyebrow">Bàn tính tự do</div><h1>Gạt thử và xem cách tính</h1><p>Dùng để bố mẹ làm mẫu, hoặc để con tự khám phá. Có thể dùng phím mũi tên lên/xuống trên từng cột.</p></div></div>
+    <div class="level-head"><div><div class="eyebrow">Bàn tính tự do</div><h1>Gạt thử và xem cách tính</h1><p>Dùng để bố mẹ làm mẫu, hoặc để con tự khám phá. Có thể dùng phím mũi tên lên/xuống trên từng cột.</p></div>
+      <div class="head-side"><div class="seg" role="group" aria-label="Dụng cụ"><button data-action="free-tool" data-tool="abacus" aria-pressed="${!onHands}">Bàn tính</button><button data-action="free-tool" data-tool="hands" aria-pressed="${onHands}">Hai bàn tay</button></div>${onHands ? '' : handsToggle()}</div>
+    </div>
     <div class="free">
       <div class="free-board">
         <div class="ab-value${F.show ? '' : ' hidden-val'}" id="freeVal">${F.show ? 0 : 'Số đang ẩn'}</div>
@@ -1233,17 +1462,17 @@ function renderFree(app) {
         <div class="row" style="justify-content:center">
           <button class="btn ghost small" data-action="free-clear">Xóa về 0</button>
           <button class="btn ghost small" data-action="free-toggle">${F.show ? 'Ẩn số' : 'Hiện số'}</button>
-          <div class="seg" role="group" aria-label="Số cột">${[3, 5, 7].map(n => `<button data-action="free-rods" data-n="${n}" aria-pressed="${F.rods === n}">${n} cột</button>`).join('')}</div>
+          ${onHands ? '' : `<div class="seg" role="group" aria-label="Số cột">${[3, 5, 7].map(n => `<button data-action="free-rods" data-n="${n}" aria-pressed="${F.rods === n}">${n} cột</button>`).join('')}</div>`}
         </div>
         <div class="demo-caption" id="freeCap"></div>
       </div>
       <div class="panel">
-        <h3>Xem cách gạt một phép tính</h3>
-        <p>Nhập phép tính, bàn tính sẽ tự gạt từng bước và giải thích khi nào dùng bạn nhỏ, bạn lớn.</p>
+        <h3>Xem cách ${onHands ? 'tính trên hai bàn tay' : 'gạt một phép tính'}</h3>
+        <p>${onHands ? 'Nhập phép tính (kết quả đến 99), hai bàn tay sẽ tự giơ, gập ngón theo từng bước.' : 'Nhập phép tính, bàn tính sẽ tự gạt từng bước và giải thích khi nào dùng bạn nhỏ, bạn lớn.'}</p>
         <form class="calc-form" id="calcForm">
-          <label class="field">Số thứ nhất<input id="fa" type="number" min="0" max="9999" value="46"></label>
+          <label class="field">Số thứ nhất<input id="fa" type="number" min="0" max="9999" value="${onHands ? 27 : 46}"></label>
           <label class="field">Phép<select id="fop"><option value="1">+</option><option value="-1">−</option></select></label>
-          <label class="field">Số thứ hai<input id="fb2" type="number" min="0" max="9999" value="38"></label>
+          <label class="field">Số thứ hai<input id="fb2" type="number" min="0" max="9999" value="${onHands ? 15 : 38}"></label>
         </form>
         <div class="row" style="margin-top:12px"><button class="btn small" data-action="free-demo">▶ Minh họa</button></div>
         <p id="freeErr" style="color:var(--bad);margin-top:8px" role="status"></p>
@@ -1251,19 +1480,22 @@ function renderFree(app) {
       </div>
     </div>`;
   const valEl = $('#freeVal');
-  const ab = new Abacus($('#freeAb'), { rods: F.rods, big: F.rods <= 5, labels: F.rods <= 5, onChange: v => { if (F.show) valEl.textContent = v; } });
-  widgets[0] = ab;
+  const onChange = v => { if (F.show) valEl.textContent = v; };
+  widgets[0] = onHands ? new Hands($('#freeAb'), { onChange }) : new Abacus($('#freeAb'), { rods: F.rods, big: F.rods <= 5, labels: F.rods <= 5, onChange });
   $('#calcForm').addEventListener('submit', e => { e.preventDefault(); freeDemo(); });
 }
 function freeDemo() {
-  const F = state.free, ab = widgets[0];
+  const F = state.free, ab = widgets[0], onHands = F.tool === 'hands';
   const a = Math.floor(+$('#fa').value), b = Math.floor(+$('#fb2').value), sign = +$('#fop').value;
   const err = $('#freeErr'); err.textContent = '';
-  const max = Math.pow(10, F.rods) - 1;
+  const max = Math.pow(10, ab.rods) - 1;
   if (!(a >= 0) || !(b >= 0)) { err.textContent = 'Hãy nhập hai số không âm.'; return; }
   if (sign < 0 && b > a) { err.textContent = 'Số trừ lớn hơn số bị trừ — hãy đổi lại để kết quả không âm.'; return; }
-  if (a > max || b > max || a + b > max) { err.textContent = `Bàn tính ${F.rods} cột chỉ chứa được tới ${max}. Chọn thêm cột hoặc số nhỏ hơn.`; return; }
-  const plan = planCalc(a, [{ sign, n: b }], F.rods);
+  if (a > max || b > max || a + sign * b > max) {
+    err.textContent = onHands ? 'Hai bàn tay chỉ biểu diễn được tới 99. Hãy chọn số nhỏ hơn.' : `Bàn tính ${ab.rods} cột chỉ chứa được tới ${max}. Chọn thêm cột hoặc số nhỏ hơn.`;
+    return;
+  }
+  const plan = planCalc(a, [{ sign, n: b }], ab.rods, onHands ? 'fingers' : abacusVocab());
   const list = $('#freeSteps'), cap = $('#freeCap'), valEl = $('#freeVal');
   list.innerHTML = plan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('');
   const lis = list.querySelectorAll('li');
@@ -1281,6 +1513,139 @@ function freeDemo() {
   }, k * 1600));
 }
 
+/* ---------- Trang hướng dẫn tính nhẩm ---------- */
+const MENTAL_DEMO = { start: 27, ops: [{ sign: 1, n: 15 }] };
+function renderMental(app) {
+  const M = state.mental;
+  const lvl = id => { const L = levelById(id), un = isUnlocked(id); return `<button class="btn ${un ? 'soft' : 'ghost'} small" data-action="open-level" data-id="${id}" ${un ? '' : 'disabled'}>Cấp ${id}: ${L.name}${un ? '' : ' (chưa mở)'}</button>`; };
+  const plan = planCalc(MENTAL_DEMO.start, MENTAL_DEMO.ops, 2, 'abacus');
+  const fplan = planCalc(MENTAL_DEMO.start, MENTAL_DEMO.ops, 2, 'fingers');
+  app.innerHTML = `
+    <div class="level-head"><div><div class="eyebrow">Tính nhẩm Anzan · 暗算</div><h1>Hướng dẫn tính nhẩm từng bước</h1><p>Tính nhẩm Soroban không phải học thuộc kết quả. Con "nhìn" thấy bàn tính trong đầu và gạt hạt bằng tưởng tượng. Đi lần lượt qua 4 giai đoạn dưới đây, mỗi giai đoạn vài tuần.</p></div></div>
+    <div class="article">
+      <div class="panel">
+        <h2>Vì sao bàn tính giúp con tính nhẩm?</h2>
+        <p>Sau một thời gian luyện tập, mỗi số gắn với một hình ảnh cố định: số 7 là "hạt trên và hai hạt dưới". Con nhớ hình ảnh dễ hơn nhớ một dãy chữ số, nên con có thể gạt hạt trong đầu thay vì đặt tính.</p>
+        <p>Bạn nhỏ, bạn lớn trở thành động tác quen tay, nên khi tính nhẩm con không phải dừng lại để nghĩ cách nhớ hay mượn. Vì vậy kỹ thuật tay chắc chắn là nền tảng của tính nhẩm nhanh.</p>
+      </div>
+      <div class="stages">
+        <div class="stage"><div class="stage-n">1</div><h3>Bàn tính thật, dùng hai tay</h3><p>Luyện cấp 1–7 cho đến khi tay gạt không cần nghĩ. Tay phải lo cột đơn vị, tay trái lo cột chục. Bật "Chế độ 2 tay" để gợi ý ghi rõ từng ngón.</p><span class="pill">Cấp 1–7</span></div>
+        <div class="stage"><div class="stage-n">2</div><h3>Bàn tính trên hai bàn tay</h3><p>Mỗi bàn tay là một cột: ngón cái bằng 5, bốn ngón còn lại mỗi ngón bằng 1. Con tính được ở bất cứ đâu, không cần bàn tính.</p><span class="pill">Cấp 8</span></div>
+        <div class="stage"><div class="stage-n">3</div><h3>Bàn tính ảo</h3><p>Con nhìn vào khoảng trống trước mặt, tưởng tượng bàn tính ở đó, ngón tay gạt trong không khí. Luyện bằng bài "Chụp ảnh bàn tính" bên dưới.</p><span class="pill">Mỗi ngày 2–3 phút</span></div>
+        <div class="stage"><div class="stage-n">4</div><h3>Anzan</h3><p>Con nghe hoặc nhìn số và tính hoàn toàn trong đầu. Ngón tay có thể vẫn cử động nhẹ, điều đó hoàn toàn bình thường.</p><span class="pill">Cấp 9–10</span></div>
+      </div>
+      <div class="panel">
+        <h2>Cùng một phép tính: bàn tính, bàn tay, rồi trong đầu</h2>
+        <p>Bấm "Xem minh họa": bàn tính và hai bàn tay thay đổi giống hệt nhau. Sau đó cho con nhắm mắt và tự kể lại từng bước. Đó chính là tính nhẩm.</p>
+        <div class="center-col">
+          <div class="q-expr" style="font-size:2rem">${MENTAL_DEMO.start} + ${MENTAL_DEMO.ops[0].n} = <span class="qm" id="mdRes">?</span></div>
+          <div class="duo"><div id="mdAb"></div><div id="mdHands"></div></div>
+          <button class="btn small" data-action="mental-demo">▶ Xem minh họa</button>
+          <div class="demo-caption" id="mdCap" style="max-width:52ch"></div>
+        </div>
+        <div class="grid2" style="margin-top:12px">
+          <div><h3 style="font-size:1rem;margin-bottom:6px">Trên bàn tính</h3><ol class="steps" id="mdSteps">${plan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('')}</ol></div>
+          <div><h3 style="font-size:1rem;margin-bottom:6px">Trên hai bàn tay</h3><ol class="steps" id="mdFSteps">${fplan.steps.map(s => `<li class="${s.kind === 'head' ? 'head' : ''}">${s.text}</li>`).join('')}</ol></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Bài tập: Chụp ảnh bàn tính</h2>
+        <p>Bàn tính hiện ra trong chốc lát rồi bị che lại. Con "chụp" hình ảnh vào đầu và nói ra số. Bài này rèn khả năng giữ hình bàn tính trong đầu, là kỹ năng cốt lõi của Anzan.</p>
+        <div class="center-col">
+          <div class="seg" role="group" aria-label="Số cột">${[1, 2, 3].map(n => `<button data-action="flash-digits" data-n="${n}" aria-pressed="${M.digits === n}">${n} cột</button>`).join('')}</div>
+          <div class="flash-wrap"><div id="fxAb"></div><div class="flash-cover" id="fxCover">?</div></div>
+          <div class="row" style="justify-content:center">
+            <button class="btn" data-action="flash-show" id="fxShow">Chiếu hình</button>
+            <input class="answer-input" id="fxAns" inputmode="numeric" autocomplete="off" aria-label="Số con nhìn thấy" maxlength="3" style="width:130px;font-size:1.8rem" hidden>
+            <button class="btn good" data-action="flash-check" id="fxCheck" hidden>Kiểm tra</button>
+          </div>
+          <div class="feedback" id="fxFb" role="status"></div>
+          <p style="color:var(--muted);font-variant-numeric:tabular-nums">Chuỗi đúng liên tiếp: <b id="fxStreak">${M.streak}</b> · Kỷ lục: <b id="fxBest">${progress.flashBest || 0}</b></p>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h2>Bài tập mỗi ngày (5–10 phút)</h2><ol>
+          <li><b>1 phút</b>: nhắm mắt, hình dung bàn tính trống, rồi lần lượt "đặt" các số 1 đến 9 trong đầu.</li>
+          <li><b>2 phút</b>: Chụp ảnh bàn tính (bài ở trên), tăng dần số cột.</li>
+          <li><b>3 phút</b>: bố mẹ đọc chậm một dãy 3 số ("năm, cộng ba, trừ hai"). Con tính trên hai bàn tay, rồi tính lại chỉ trong đầu.</li>
+          <li><b>2 phút</b>: một lượt ở cấp Anzan phù hợp, bắt đầu với tốc độ Chậm.</li>
+        </ol></div>
+        <div class="panel"><h2>Dấu hiệu con đã sẵn sàng</h2><ul>
+          <li>Đạt 3 sao ở cấp 6 và cấp 7.</li>
+          <li>Dùng bạn nhỏ, bạn lớn mà không cần nhìn bảng.</li>
+          <li>Nhắm mắt vẫn kể lại được từng bước gạt hạt.</li>
+          <li>Tính trên hai bàn tay nhanh gần bằng trên bàn tính.</li>
+        </ul></div>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h2>Lỗi thường gặp</h2><ul>
+          <li><b>Con đếm ngón tay kiểu 1, 2, 3…</b> Nhắc con: ngón cái là 5, hãy "nhìn" hạt thay vì đếm.</li>
+          <li><b>Con quên số giữa dãy.</b> Giảm số lượng số, dặn con đọc thầm kết quả sau mỗi số.</li>
+          <li><b>Con căng thẳng khi số chạy nhanh.</b> Quay về tốc độ Chậm, học ngắn hơn và khen nhiều hơn.</li>
+          <li><b>Con nhìn lên, ngón tay động đậy.</b> Đây là dấu hiệu tốt: con đang dùng bàn tính ảo.</li>
+        </ul></div>
+        <div class="panel"><h2>Câu nói giúp con hình dung</h2><ul class="quote-list">
+          <li>"Bàn tính trong đầu con đang là số mấy?"</li>
+          <li>"Hạt nào vừa chạm xà ngang?"</li>
+          <li>"Tay phải của con làm gì, tay trái làm gì?"</li>
+          <li>"Con nhắm mắt kể lại cho mẹ nghe từng bước nhé."</li>
+        </ul></div>
+      </div>
+      <div class="panel"><h2>Luyện tập trong trò chơi</h2><div class="row">${lvl(8)}${lvl(9)}${lvl(10)}</div></div>
+    </div>`;
+  const ab = new Abacus($('#mdAb'), { rods: 2, interactive: false, hands: true, value: MENTAL_DEMO.start });
+  const hd = new Hands($('#mdHands'), { interactive: false, value: MENTAL_DEMO.start });
+  widgets.push(ab, hd);
+  state.mentalWidgets = { ab, hd, fx: new Abacus($('#fxAb'), { rods: M.digits, interactive: false, hands: false }) };
+  $('#fxAns').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); });
+  $('#fxAns').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); flashCheck(); } });
+}
+function mentalDemo() {
+  const { ab, hd } = state.mentalWidgets;
+  const plan = planCalc(MENTAL_DEMO.start, MENTAL_DEMO.ops, 2, 'abacus');
+  const fplan = planCalc(MENTAL_DEMO.start, MENTAL_DEMO.ops, 2, 'fingers');
+  const lis = $('#mdSteps').querySelectorAll('li'), flis = $('#mdFSteps').querySelectorAll('li'), cap = $('#mdCap');
+  clearTimers();
+  const token = ++animToken, alive = () => token === animToken;
+  $('#mdRes').textContent = '?';
+  plan.steps.forEach((s, k) => later(() => {
+    if (!alive()) return;
+    ab.setDigits(s.digits); hd.setDigits(s.digits); ab.flashRod(s.rod); hd.flashRod(s.rod);
+    if (s.kind !== 'head') Sound.click();
+    [lis, flis].forEach(list => list.forEach((li, j) => { li.classList.toggle('cur', j === k); li.classList.toggle('done', j < k); }));
+    cap.innerHTML = fplan.steps[k].text;
+    if (k === plan.steps.length - 1) later(() => { if (!alive()) return; ab.flashRod(null); hd.flashRod(null); $('#mdRes').textContent = plan.result; cap.innerHTML = 'Giờ con nhắm mắt, tự kể lại các bước này nhé!'; }, 1600);
+  }, k * 1900));
+}
+function flashShow() {
+  const M = state.mental, { fx } = state.mentalWidgets;
+  const n = rnd(M.digits === 1 ? 1 : Math.pow(10, M.digits - 1), Math.pow(10, M.digits) - 1);
+  M.answer = n;
+  fx.setValue(n, true);
+  clearTimers();
+  const token = ++animToken, alive = () => token === animToken;
+  $('#fxCover').hidden = true; $('#fxAns').hidden = true; $('#fxCheck').hidden = true; $('#fxShow').hidden = true;
+  const fb = $('#fxFb'); fb.className = 'feedback'; fb.textContent = '';
+  later(() => {
+    if (!alive()) return;
+    $('#fxCover').hidden = false; $('#fxAns').hidden = false; $('#fxCheck').hidden = false;
+    const inp = $('#fxAns'); inp.value = ''; inp.focus({ preventScroll: true });
+  }, 900 + M.digits * 500);
+}
+function flashCheck() {
+  const M = state.mental, inp = $('#fxAns');
+  if (M.answer == null || inp.value === '') return;
+  const ok = +inp.value === M.answer, fb = $('#fxFb');
+  $('#fxCover').hidden = true;
+  if (ok) { M.streak++; Sound.good(); fb.className = 'feedback ok'; fb.textContent = `${pick(PRAISE)} Đó là số ${M.answer}.`; }
+  else { M.streak = 0; Sound.bad(); fb.className = 'feedback no'; fb.textContent = `Hình vừa rồi là số ${M.answer}. Con nhìn lại bàn tính và thử lần nữa nhé!`; }
+  if (M.streak > (progress.flashBest || 0)) { progress.flashBest = M.streak; saveProgress(); }
+  $('#fxStreak').textContent = M.streak; $('#fxBest').textContent = progress.flashBest || 0;
+  M.answer = null;
+  $('#fxAns').hidden = true; $('#fxCheck').hidden = true;
+  const show = $('#fxShow'); show.hidden = false; show.textContent = 'Chiếu hình tiếp'; show.focus({ preventScroll: true });
+}
+
 /* ---------- Trang phụ huynh ---------- */
 function renderParents(app) {
   const rows = LEVELS.map(l => {
@@ -1293,7 +1658,7 @@ function renderParents(app) {
       <div class="panel">
         <h2>Soroban là gì?</h2>
         <p><b>Soroban</b> (そろばん) là bàn tính của Nhật Bản. Mỗi cột có <b>1 hạt trên</b> (giá trị 5) và <b>4 hạt dưới</b> (mỗi hạt giá trị 1), ngăn cách bởi xà ngang. Mỗi cột biểu diễn một chữ số từ 0 đến 9, nên bàn tính có bao nhiêu cột thì biểu diễn được số có bấy nhiêu chữ số.</p>
-        <p>Trẻ học Soroban trước hết luyện tay trên bàn tính thật, sau đó dần dần "chụp" hình ảnh bàn tính vào đầu để tính nhẩm — gọi là <b>Anzan</b> (暗算). Ở Nhật, trình độ được chia theo <b>kyū</b> (級): số càng nhỏ càng giỏi. Các cấp trong trò chơi được đặt tên theo tinh thần đó, từ 10 kyū đến 2 kyū.</p>
+        <p>Trẻ học Soroban trước hết luyện tay trên bàn tính thật, sau đó dần dần "chụp" hình ảnh bàn tính vào đầu để tính nhẩm — gọi là <b>Anzan</b> (暗算). Ở Nhật, trình độ được chia theo <b>kyū</b> (級): số càng nhỏ càng giỏi. Các cấp trong trò chơi được đặt tên theo tinh thần đó, từ 10 kyū đến 1 kyū.</p>
       </div>
       <div class="grid2">
         <div class="panel"><h2>Lợi ích cho con</h2><ul>
@@ -1314,7 +1679,9 @@ function renderParents(app) {
           <li><b>Phụ huynh đọc</b> trước: mỗi cấp có mục tiêu, cách hướng dẫn, lỗi thường gặp và câu nói gợi ý.</li>
           <li><b>Bài học cho con</b>: ngồi cùng con, bấm "Xem minh họa" để bàn tính tự gạt từng bước. Đọc to phần giải thích.</li>
           <li><b>Luyện tập</b>: con tự làm, bố mẹ quan sát. Đúng ngay lần đầu mới được tính điểm; tối đa 3 sao mỗi cấp.</li>
-          <li><b>Bàn tính tự do</b>: bố mẹ nhập bất kỳ phép tính nào để xem cách gạt, hữu ích khi con hỏi bài tập ở trường.</li>
+          <li><b>Bàn tính tự do</b>: bố mẹ nhập bất kỳ phép tính nào để xem cách gạt (trên bàn tính hoặc trên hai bàn tay), hữu ích khi con hỏi bài tập ở trường.</li>
+          <li><b>Chế độ 2 tay</b>: bật ở đầu trang mỗi cấp hoặc trong Cài đặt bên dưới. Bàn tính tô màu cột theo tay, gợi ý ghi rõ tay nào, ngón nào.</li>
+          <li><b>Tính nhẩm</b>: trang riêng hướng dẫn 4 giai đoạn từ bàn tính thật đến Anzan, kèm bài tập "Chụp ảnh bàn tính".</li>
         </ol>
       </div>
       <div class="panel">
@@ -1338,6 +1705,21 @@ function renderParents(app) {
           <li>Luôn tính từ <b>cột trái sang cột phải</b>.</li>
         </ul></div>
       </div>
+      <div class="panel">
+        <h2>Kỹ thuật hai tay</h2>
+        <div class="grid2">
+          <ul>
+            <li><span class="hand-tag R">Tay phải</span> phụ trách cột <b>đơn vị</b>. Ngón cái đẩy hạt dưới lên; ngón trỏ kéo hạt dưới xuống và gạt hạt trên.</li>
+            <li><span class="hand-tag L">Tay trái</span> phụ trách cột <b>chục</b> (và trăm), dùng ngón cái, ngón trỏ giống tay phải.</li>
+            <li>Khi nhớ hoặc mượn, <b>hai tay làm cùng lúc</b>: tay phải xử lý bạn lớn ở cột đơn vị, tay trái thêm hoặc bớt 1 ở cột chục.</li>
+          </ul>
+          <ul>
+            <li>Nên bắt đầu khi con đã quen một tay ở cấp 4–5. Lúc đầu con sẽ chậm hơn, sau khoảng một tuần sẽ nhanh hơn rõ rệt.</li>
+            <li>Hai tay trên bàn tính là bước đệm cho <b>bàn tính trên hai bàn tay</b> (cấp 8): tay phải vẫn là đơn vị, tay trái vẫn là chục.</li>
+            <li>Bật <b>Chế độ 2 tay</b> để mọi bài học, gợi ý và minh họa trong trò chơi ghi rõ tay nào, ngón nào.</li>
+          </ul>
+        </div>
+      </div>
       <div class="grid2">
         <div class="panel"><h2>Bảng bạn nhỏ (hợp 5)</h2><p>Dùng khi cột thiếu hạt dưới. Cộng n = cộng 5, trừ bạn nhỏ. Trừ n = cộng bạn nhỏ, trừ 5.</p>${FIVE_TABLE}</div>
         <div class="panel"><h2>Bảng bạn lớn (hợp 10)</h2><p>Dùng khi phải nhớ hoặc mượn. Cộng n = trừ bạn lớn, nhớ 1 sang trái. Trừ n = mượn 1 bên trái, cộng bạn lớn.</p>${TEN_TABLE}</div>
@@ -1351,6 +1733,7 @@ function renderParents(app) {
       </ul></div>
       <div class="panel">
         <h2>Cài đặt</h2>
+        <div class="switch-row"><span>Chế độ 2 tay: tô màu cột theo tay, gợi ý ghi rõ tay và ngón</span>${handsToggle()}</div>
         <div class="switch-row"><span>Âm thanh khi gạt hạt và trả lời</span><button class="btn ghost small" data-action="toggle-sound">${progress.sound ? 'Đang bật — Tắt' : 'Đang tắt — Bật'}</button></div>
         <div class="switch-row"><span>Mở khóa tất cả cấp độ (khi con đã học Soroban ở nơi khác)</span><button class="btn ghost small" data-action="unlock-all">${progress.unlockAll ? 'Đang mở — Khóa lại' : 'Mở khóa'}</button></div>
         <div class="switch-row" style="display:grid">
@@ -1381,7 +1764,7 @@ document.addEventListener('click', e => {
     case 'check': checkAnswer(); break;
     case 'clear': {
       const S = state.session, q = S && S.qs[S.idx]; if (!q || S.solved) return;
-      widgets[0].setValue(q.type === 'calc' ? q.start : 0, true); feedback('', ''); break;
+      widgets[0].setValue(q.type === 'calc' || q.type === 'hand-calc' ? q.start : 0, true); feedback('', ''); break;
     }
     case 'hint': showHint(false); feedback('info', 'Làm theo từng dòng nhé. Câu này sẽ không được tính điểm.'); break;
     case 'choose': chooseOption(t); break;
@@ -1402,6 +1785,19 @@ document.addEventListener('click', e => {
     }
     case 'free-rods': clearTimers(); state.free.rods = +t.dataset.n; render(); break;
     case 'free-demo': freeDemo(); break;
+    case 'free-tool': clearTimers(); state.free.tool = t.dataset.tool; render(); break;
+    case 'toggle-hands': {
+      clearTimers();
+      const S = state.session, practicing = state.view === 'level' && state.tab === 'practice' && S && S.phase === 'q';
+      const keep = practicing && widgets[0] && !S.solved ? widgets[0].getValue() : null;
+      progress.twoHands = !progress.twoHands; saveProgress(); render();
+      if (keep != null && widgets[0]) widgets[0].setValue(keep, true);
+      break;
+    }
+    case 'mental-demo': mentalDemo(); break;
+    case 'flash-digits': clearTimers(); state.mental.digits = +t.dataset.n; state.mental.answer = null; render(); break;
+    case 'flash-show': flashShow(); break;
+    case 'flash-check': flashCheck(); break;
     case 'toggle-sound': progress.sound = !progress.sound; saveProgress(); render(); break;
     case 'unlock-all': progress.unlockAll = !progress.unlockAll; saveProgress(); render(); break;
     case 'reset-ask': state.confirmReset = true; render(); break;

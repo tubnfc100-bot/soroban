@@ -18,8 +18,9 @@ Tiến độ (số sao) được lưu ngay trên trình duyệt đó.
 | 5 | 6 kyū | Bạn nhỏ (hợp 5): 1–4, 2–3 | Tính trên bàn tính |
 | 6 | 5 kyū | Bạn lớn (hợp 10): cộng có nhớ, trừ có mượn | Tính trên bàn tính |
 | 7 | 4 kyū | Dãy 3 số hai chữ số (dạng đề thi) | Tính trên bàn tính |
-| 8 | 3 kyū | Tính nhẩm Anzan một chữ số | Chiếu số nhanh |
-| 9 | 2 kyū | Anzan hai chữ số | Chiếu số nhanh |
+| 8 | 3 kyū | Bàn tính trên hai bàn tay (ngón cái = 5, mỗi ngón khác = 1) | Giơ/gập ngón tay |
+| 9 | 2 kyū | Tính nhẩm Anzan một chữ số | Chiếu số nhanh |
+| 10 | 1 kyū | Anzan hai chữ số | Chiếu số nhanh |
 
 Mỗi cấp có 3 phần:
 
@@ -29,7 +30,10 @@ Mỗi cấp có 3 phần:
 
 Ngoài ra:
 
-- **Bàn tính tự do**: gạt thoải mái, hoặc nhập một phép tính để xem cách gạt từng bước (khi nào dùng bạn nhỏ, bạn lớn).
+- **Chế độ 2 tay**: tay phải lo cột đơn vị, tay trái lo cột chục. Bàn tính tô màu cột theo tay; bài học, gợi ý và minh họa ghi rõ tay nào, ngón nào (ngón cái đẩy hạt dưới lên, ngón trỏ kéo hạt dưới xuống và gạt hạt trên). Bạn lớn được làm bằng hai tay cùng lúc.
+- **Tính nhẩm**: trang hướng dẫn 4 giai đoạn (bàn tính thật hai tay → bàn tính trên bàn tay → bàn tính ảo → Anzan), minh họa song song bàn tính và bàn tay, bài tập "Chụp ảnh bàn tính", lịch luyện mỗi ngày, dấu hiệu sẵn sàng và lỗi thường gặp.
+
+- **Bàn tính tự do**: gạt thoải mái trên bàn tính hoặc trên hai bàn tay, hoặc nhập một phép tính để xem cách làm từng bước (khi nào dùng bạn nhỏ, bạn lớn).
 - **Trang phụ huynh**: Soroban là gì, lộ trình, buổi học mẫu 15 phút, kỹ thuật ngón tay, bảng bạn nhỏ – bạn lớn, bảng tiến độ của con, cài đặt (âm thanh, mở khóa tất cả, xóa tiến độ).
 
 ## Điều khiển
